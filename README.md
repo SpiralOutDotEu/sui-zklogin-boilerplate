@@ -675,6 +675,427 @@ VITE_SUI_RPC_URL=https://fullnode.devnet.sui.io:443
 4. Add tests if applicable
 5. Submit a pull request
 
+## 🎨 Styling Guide for Maintainers
+
+This section provides comprehensive guidelines for maintaining and extending the codebase while preserving consistency and architectural patterns.
+
+### 🏗️ Architecture Overview
+
+The project follows a **Service Layer + State Management + React Context** pattern:
+
+```mermaid
+graph TB
+    subgraph "Presentation Layer"
+        A[React Components]
+        B[UI Components]
+        C[Routes]
+    end
+
+    subgraph "State Management Layer"
+        D[ZkLoginProvider]
+        E[ZkLoginStore]
+        F[Cross-tab Sync]
+    end
+
+    subgraph "Service Layer"
+        G[ZkLoginService]
+        H[SaltService]
+    end
+
+    subgraph "Infrastructure Layer"
+        I[Cookie Storage]
+        J[Sui Client]
+        K[External APIs]
+    end
+
+    A --> D
+    B --> D
+    C --> D
+    D --> E
+    E --> G
+    G --> H
+    G --> I
+    G --> J
+    G --> K
+```
+
+### 📁 File Organization Patterns
+
+#### **Service Layer** (`src/services/`)
+
+- **Purpose**: Pure business logic and external API interactions
+- **Pattern**: Class-based services with dependency injection
+- **Naming**: `{feature}Service.ts` (e.g., `zkLoginService.ts`, `saltService.ts`)
+- **Structure**:
+  ```typescript
+  export class FeatureService {
+    constructor(config: FeatureConfig) {
+      /* DI setup */
+    }
+    async methodName(): Promise<Result> {
+      /* business logic */
+    }
+  }
+  export function createFeatureService(): FeatureService {
+    /* factory */
+  }
+  ```
+
+#### **State Management** (`src/store/`)
+
+- **Purpose**: Thin state management wrapper over services
+- **Pattern**: Zustand store with custom storage
+- **Naming**: `{feature}Store.ts` (e.g., `zkLoginStore.ts`)
+- **Structure**:
+  ```typescript
+  export const useFeatureStore = create<FeatureState>()(
+    persist(
+      (set, get) => ({
+        // State
+        data: null,
+        // Actions that delegate to services
+        action: async () => {
+          const { service } = get();
+          const result = await service.method();
+          if (result.success) set({ data: result.data });
+        },
+      }),
+      { name: "feature-storage", storage: createCustomStorage() }
+    )
+  );
+  ```
+
+#### **React Integration** (`src/state/`)
+
+- **Purpose**: Bridge between React and state management
+- **Pattern**: React Context + custom hook
+- **Naming**: `{Feature}Provider.tsx` (e.g., `ZkLoginProvider.tsx`)
+- **Structure**:
+
+  ```typescript
+  const FeatureCtx = createContext<FeatureContext | null>(null);
+
+  export function FeatureProvider({ children }) {
+    const store = useFeatureStore();
+    const value = { ...store, client: sharedClient };
+    return <FeatureCtx.Provider value={value}>{children}</FeatureCtx.Provider>;
+  }
+
+  export function useFeature() {
+    const context = useContext(FeatureCtx);
+    if (!context)
+      throw new Error("useFeature must be used within FeatureProvider");
+    return context;
+  }
+  ```
+
+### 🎨 UI Component Styling Guide
+
+#### **Component Structure Pattern**
+
+Every UI component follows this consistent structure:
+
+```typescript
+// ============================================================================
+// TYPES & INTERFACES
+// ============================================================================
+
+interface ComponentProps {
+  /** Description of prop */
+  propName: type;
+  /** Optional prop with default */
+  optionalProp?: type;
+}
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const DEFAULT_VALUE = "default" as const;
+
+const STYLES = {
+  container: "base-classes",
+  element: "conditional-classes",
+  // ... more style objects
+} as const;
+
+const TEXT = {
+  title: "Static text",
+  subtitle: "More static text",
+} as const;
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+const helperFunction = (param: type): returnType => {
+  // Helper logic
+};
+
+// ============================================================================
+// COMPONENT
+// ============================================================================
+
+/**
+ * ComponentName Component
+ *
+ * Detailed description of what the component does, its features,
+ * and any important usage notes.
+ *
+ * @param props - Component props
+ * @returns JSX element
+ */
+export default function ComponentName({
+  propName,
+  optionalProp = DEFAULT_VALUE,
+}: ComponentProps) {
+  // ============================================================================
+  // HOOKS & STATE
+  // ============================================================================
+
+  const [state, setState] = useState(initialValue);
+
+  // ============================================================================
+  // EVENT HANDLERS
+  // ============================================================================
+
+  const handleEvent = (): void => {
+    // Event handling logic
+  };
+
+  // ============================================================================
+  // RENDER
+  // ============================================================================
+
+  return <div className={STYLES.container}>{/* Component JSX */}</div>;
+}
+```
+
+#### **Styling Conventions**
+
+##### **1. Style Object Pattern**
+
+```typescript
+const STYLES = {
+  // Base container styles
+  container: "base-classes",
+
+  // Conditional styles (use template literals for dynamic classes)
+  button: "base-classes",
+  buttonEnabled: "base-classes hover:classes",
+  buttonDisabled: "base-classes opacity-50 cursor-not-allowed",
+
+  // Nested element styles
+  header: "header-classes",
+  content: "content-classes",
+  footer: "footer-classes",
+} as const;
+```
+
+##### **2. Class Naming Conventions**
+
+- **Container**: `container`, `wrapper`, `layout`
+- **Interactive**: `button`, `link`, `input`
+- **State variants**: `{element}{State}` (e.g., `buttonEnabled`, `buttonDisabled`)
+- **Layout**: `header`, `content`, `footer`, `sidebar`
+- **Responsive**: `{element}Mobile`, `{element}Desktop`
+
+##### **3. Color Palette**
+
+```css
+/* Primary Colors */
+--gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+--gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+--gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+
+/* Background */
+background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+
+/* Glass Effect */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+```
+
+##### **4. Animation Patterns**
+
+```typescript
+// Hover effects
+"hover:scale-105 hover:from-purple-600 hover:to-blue-600 transition-all duration-200";
+
+// Loading states
+"animate-spin"; // for spinners
+"animate-pulse-slow"; // for background effects
+
+// Glow effects
+"glow-effect"; // custom class for glowing elements
+```
+
+#### **UI Folder Structure** (`src/ui/`)
+
+The UI folder contains reusable components following these patterns:
+
+##### **1. Layout Components**
+
+- **`AppLayout.tsx`**: Main app wrapper with background effects
+- **`Navbar.tsx`**: Navigation with authentication state
+- **Pattern**: Layout components handle structure and positioning
+
+##### **2. Interactive Components**
+
+- **`ConnectWalletButton.tsx`**: OAuth login initiation
+- **`UserWalletButton.tsx`**: Connected user display with dropdown
+- **`DropdownMenu.tsx`**: Reusable dropdown with context
+- **Pattern**: Interactive components handle user actions and state
+
+##### **3. Display Components**
+
+- **`Avatar.tsx`**: Deterministic avatar generation
+- **Pattern**: Display components are pure and stateless
+
+##### **Component Responsibilities**
+
+| Component             | Purpose                 | Props                                                        | State                      | Dependencies                                            |
+| --------------------- | ----------------------- | ------------------------------------------------------------ | -------------------------- | ------------------------------------------------------- |
+| `AppLayout`           | Main layout wrapper     | None                                                         | None                       | `Navbar`, `Outlet`                                      |
+| `Navbar`              | Navigation & auth state | None                                                         | None                       | `useZkLogin`, `ConnectWalletButton`, `UserWalletButton` |
+| `ConnectWalletButton` | OAuth login             | None                                                         | `isConnecting`             | `useZkLogin`                                            |
+| `UserWalletButton`    | User display & actions  | `address`, `onDisconnect`, `isMobile?`, `includeNavigation?` | `copied`, `isDropdownOpen` | `Avatar`, `DropdownMenu`                                |
+| `DropdownMenu`        | Reusable dropdown       | `trigger`, `children`, `position?`, `width?`, `isMobile?`    | `isOpen`                   | Context API                                             |
+| `Avatar`              | Address-based avatar    | `address`, `size?`, `className?`                             | None                       | `@dicebear/core`                                        |
+
+### 🔧 Development Guidelines
+
+#### **Adding New Features**
+
+1. **Service Layer First**
+
+   ```typescript
+   // 1. Create service in src/services/
+   export class NewFeatureService {
+     async method(): Promise<Result> {
+       /* business logic */
+     }
+   }
+   ```
+
+2. **Add to Store**
+
+   ```typescript
+   // 2. Add to store in src/store/
+   newFeatureService: createNewFeatureService(),
+   newFeatureAction: async () => {
+     const { newFeatureService } = get();
+     const result = await newFeatureService.method();
+     // Handle result
+   }
+   ```
+
+3. **Expose via Provider**
+
+   ```typescript
+   // 3. Add to provider in src/state/
+   const { newFeatureAction } = useFeatureStore();
+   const value = { ...store, newFeatureAction };
+   ```
+
+4. **Create UI Components**
+   ```typescript
+   // 4. Create UI components in src/ui/
+   export default function NewFeatureComponent() {
+     const { newFeatureAction } = useFeature();
+     // Component implementation
+   }
+   ```
+
+#### **Component Development Checklist**
+
+- [ ] **Types & Interfaces**: Define all props with JSDoc comments
+- [ ] **Constants**: Extract all strings and style objects
+- [ ] **Structure**: Follow the 5-section component structure
+- [ ] **Styling**: Use STYLES object pattern with consistent naming
+- [ ] **Accessibility**: Include proper ARIA labels and keyboard navigation
+- [ ] **Responsive**: Test on mobile and desktop layouts
+- [ ] **Error Handling**: Include proper error states and loading states
+- [ ] **Documentation**: Add comprehensive JSDoc comments
+
+#### **Styling Best Practices**
+
+1. **Use Style Objects**: Never inline complex className strings
+2. **Consistent Naming**: Follow the established naming conventions
+3. **Responsive Design**: Always consider mobile and desktop layouts
+4. **Accessibility**: Include proper contrast ratios and focus states
+5. **Performance**: Use CSS classes over inline styles
+6. **Maintainability**: Group related styles together
+
+#### **Code Quality Standards**
+
+1. **TypeScript**: Strict typing with no `any` types
+2. **Error Handling**: Proper error boundaries and user feedback
+3. **Performance**: Memoization for expensive operations
+4. **Testing**: Unit tests for business logic, integration tests for UI
+5. **Documentation**: JSDoc comments for all public APIs
+
+### 🚀 Quick Reference
+
+#### **Common Patterns**
+
+```typescript
+// Service pattern
+export class FeatureService {
+  constructor(private config: Config) {}
+  async method(): Promise<Result> {
+    try {
+      // Business logic
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+}
+
+// Store pattern
+export const useFeatureStore = create<FeatureState>()(
+  persist(
+    (set, get) => ({
+      data: null,
+      action: async () => {
+        const { service } = get();
+        const result = await service.method();
+        if (result.success) set({ data: result.data });
+      },
+    }),
+    { name: "feature-storage", storage: createCustomStorage() }
+  )
+);
+
+// Component pattern
+export default function FeatureComponent({ prop }: Props) {
+  const { action } = useFeature();
+  const [state, setState] = useState(initial);
+
+  const handleAction = async () => {
+    await action();
+  };
+
+  return <div className={STYLES.container}>Content</div>;
+}
+```
+
+#### **File Naming Conventions**
+
+- **Services**: `{feature}Service.ts`
+- **Stores**: `{feature}Store.ts`
+- **Providers**: `{Feature}Provider.tsx`
+- **Components**: `{FeatureName}.tsx` (PascalCase)
+- **Hooks**: `use{FeatureName}.ts`
+- **Utils**: `{feature}Utils.ts`
+- **Types**: `types.ts` (centralized)
+
+This styling guide ensures consistency, maintainability, and scalability as the project grows. Follow these patterns when adding new features or maintaining existing ones.
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
