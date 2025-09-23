@@ -1,0 +1,39 @@
+# Sui zkLogin Proving Service (official images)
+# Docs: https://docs.sui.io/guides/developer/cryptography/zklogin-integration#run-the-proving-service-in-your-backend
+#
+# How to run (set envs inline or export them first):
+#   ZKEY=<absolute_path_to_zkLogin.zkey> PROVER_PORT=<port> docker compose up
+#
+# Example:
+#   ZKEY=/app/binaries/zkLogin.zkey PROVER_PORT=8080 docker compose up
+#
+# Notes:
+# - Ensure git and git-lfs are installed to obtain zkeys first.
+#   Ubuntu/Debian: apt-get update && apt-get install -y git git-lfs && git lfs install
+#   macOS (Homebrew): brew install git-lfs && git lfs install
+# - Only the zkey file is required by the backend container.
+# - You can obtain zkeys from the official repo or scripts if needed:
+#     main: wget -O - https://raw.githubusercontent.com/sui-foundation/zklogin-ceremony-contributions/main/download-main-zkey.sh | bash
+#     test: wget -O - https://raw.githubusercontent.com/sui-foundation/zklogin-ceremony-contributions/main/download-test-zkey.sh | bash
+services:
+  backend:
+    image: mysten/zklogin:prover-stable
+    volumes:
+      # The ZKEY environment variable must be set to the path of the zkey file.
+      - ${ZKEY}:/app/binaries/zkLogin.zkey
+    environment:
+      - ZKEY=/app/binaries/zkLogin.zkey
+      - WITNESS_BINARIES=/app/binaries
+
+  frontend:
+    image: mysten/zklogin:prover-fe-stable
+    command: "8080"
+    ports:
+      # Exposes the prover UI/API; set the external port via PROVER_PORT.
+      - "${PROVER_PORT}:8080"
+    environment:
+      - PROVER_URI=http://backend:8080/input
+      - NODE_ENV=production
+      - DEBUG=zkLogin:info,jwks
+      # Override default timeout (default is 15s). Adjust if requests are slow.
+      - PROVER_TIMEOUT=60
