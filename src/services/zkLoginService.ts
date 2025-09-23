@@ -13,11 +13,11 @@ import type {
     GoogleJwtPayload,
     ZkSession,
     SaltService,
-    ZkLoginServiceConfig,
     LoginResult,
     CompleteLoginResult,
     ZkSessionResult
 } from '../types';
+import { config } from '../config';
 import { client as suiClient } from '../sui/client';
 import { sessionCookieStorage } from '../utils/cookieStorage';
 import { createSaltService } from './saltService';
@@ -61,13 +61,11 @@ import { createSaltService } from './saltService';
 
 
 export class ZkLoginService {
-    private config: ZkLoginServiceConfig;
     private saltService: SaltService;
 
-    constructor(config: ZkLoginServiceConfig) {
-        this.config = config;
+    constructor() {
         this.saltService = createSaltService(
-            config.useBackendSaltService || false,
+            config.useBackendSaltService,
             config.saltServiceUrl
         );
     }
@@ -117,7 +115,7 @@ export class ZkLoginService {
             const { epoch } = await suiClient.getLatestSuiSystemState();
             // TODO: Restore
             // const maxEpoch = Number(epoch) + 2; // Valid for 2 epochs from now
-            const maxEpoch = Number(epoch) ; // Valid for 2 epochs from now 
+            const maxEpoch = Number(epoch); // Valid for 2 epochs from now 
 
             // ZKLOGIN STEP 3: Generate randomness for nonce creation
             // This randomness is used to create a unique nonce that prevents replay attacks
@@ -413,8 +411,8 @@ export class ZkLoginService {
     private buildGoogleAuthUrl(nonce: string, returnTo?: string): string {
         const state = encodeURIComponent(returnTo || "/");
         const params = new URLSearchParams({
-            client_id: this.config.googleClientId,
-            redirect_uri: this.config.redirectUrl,
+            client_id: config.googleClientId,
+            redirect_uri: config.redirectUrl,
             response_type: "id_token",
             scope: "openid email",
             nonce: nonce,
@@ -456,7 +454,7 @@ export class ZkLoginService {
                 keyClaimName: "sub",
             };
 
-            const resp = await fetch(this.config.proverUrl, {
+            const resp = await fetch(config.proverUrl, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),
@@ -503,13 +501,5 @@ export class ZkLoginService {
 
 // Factory function to create service instance
 export function createZkLoginService(): ZkLoginService {
-    const config: ZkLoginServiceConfig = {
-        googleClientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-        redirectUrl: import.meta.env.VITE_REDIRECT_URL,
-        proverUrl: import.meta.env.VITE_ZK_PROVER_URL || "https://prover-dev.mystenlabs.com/v1",
-        useBackendSaltService: import.meta.env.VITE_USE_BACKEND_SALT_SERVICE === 'true',
-        saltServiceUrl: import.meta.env.VITE_SALT_SERVICE_URL
-    };
-
-    return new ZkLoginService(config);
+    return new ZkLoginService();
 }

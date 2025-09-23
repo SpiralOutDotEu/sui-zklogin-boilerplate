@@ -1,5 +1,6 @@
 import type { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import type { SuiClient } from '@mysten/sui/client';
+import type { Config } from './config';
 
 /**
  * TypeScript Type Definitions for zkLogin
@@ -90,6 +91,8 @@ export interface SaltService {
  * 
  * Configuration object for the ZkLogin service.
  * Contains all necessary URLs and settings for OAuth and ZK proof generation.
+ * 
+ * @deprecated Use Config from './config' instead for centralized configuration
  */
 export interface ZkLoginServiceConfig {
   googleClientId: string;

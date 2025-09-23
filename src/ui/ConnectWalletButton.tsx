@@ -70,8 +70,11 @@ export default function ConnectWalletButton() {
     try {
       setIsConnecting(true);
       // Determine return URL - redirect to /profile if coming from root page
-      const returnTo = location.pathname === "/" ? "/profile" : location.pathname + location.search;
-      
+      const returnTo =
+        location.pathname === "/"
+          ? "/profile"
+          : location.pathname + location.search;
+
       // Initiate zkLogin flow with Google OAuth
       await loginWithProvider(PROVIDER, returnTo);
     } catch (error) {

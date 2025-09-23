@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useZkLogin } from "../state/ZkLoginProvider";
 import Avatar from "../ui/Avatar";
+import { config } from "../config";
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -22,8 +23,7 @@ interface OwnedObject {
 // Transactions: https://suiscan.xyz/devnet/tx/{txDigest}
 // Addresses: https://suiscan.xyz/devnet/address/{address}
 const EXPLORER_OBJECT_BASE_URL =
-  import.meta.env.VITE_EXPLORER_OBJECT_BASE_URL ||
-  "https://suiscan.xyz/devnet/object";
+  config.explorerObjectBaseUrl || "https://suiscan.xyz/devnet/object";
 
 const STYLES = {
   container: "space-y-12",
@@ -538,8 +538,6 @@ export default function Profile() {
                     </div>
                   </div>
                 )}
-
- 
               </div>
             ) : (
               <div className="text-center py-1">

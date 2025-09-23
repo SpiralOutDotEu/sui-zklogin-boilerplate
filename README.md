@@ -22,13 +22,23 @@ pnpm install
 cp .env.example .env
 ```
 
-Configure your `.env` file:
+**Configure your `.env` file** (only `VITE_GOOGLE_CLIENT_ID` is required):
 
 ```env
+# Required: Get from Google Cloud Console
 VITE_GOOGLE_CLIENT_ID=your_google_client_id
-VITE_REDIRECT_URL=http://localhost:5173/auth/callback
-VITE_ZK_PROVER_URL=https://prover-dev.mystenlabs.com/v1
+
+# Optional: All other values have smart defaults
+# VITE_REDIRECT_URL=http://localhost:5173/auth/callback  # Auto-generated
+# VITE_ZK_PROVER_URL=https://prover-dev.mystenlabs.com/v1  # Default
+# VITE_SUI_RPC_URL=https://fullnode.devnet.sui.io:443  # Default
 ```
+
+**The system automatically**:
+
+- ✅ Generates redirect URLs based on your domain
+- ✅ Uses sensible defaults for all optional configuration
+- ✅ Validates configuration on startup with clear error messages
 
 ### Running the Application
 
@@ -615,32 +625,171 @@ With a custom salt service:
 
 ## 🔧 Configuration & Environment
 
+### Centralized Configuration System
+
+This project uses a **centralized configuration system** with Zod validation that provides:
+
+- ✅ **Type-safe configuration** with runtime validation
+- ✅ **Dynamic redirect URL generation** (works across environments)
+- ✅ **Environment variable validation** with clear error messages
+- ✅ **Default values** for optional configuration
+- ✅ **Configuration summary** for debugging
+
+### Configuration Features
+
+#### **Dynamic Redirect URL Generation**
+
+The system automatically generates redirect URLs based on the current domain:
+
+- **Development**: `http://localhost:5173/auth/callback`
+- **Production**: `https://yourapp.com/auth/callback`
+- **Custom**: Override with `VITE_REDIRECT_URL` environment variable
+
+#### **Configuration Validation**
+
+All configuration is validated at startup with descriptive error messages:
+
+```typescript
+// Example validation error
+Configuration validation failed:
+googleClientId: Google Client ID is required
+saltServiceUrl: Invalid salt service URL
+```
+
+#### **Configuration Access**
+
+```typescript
+import { config } from "./config";
+
+// Type-safe access
+const clientId = config.googleClientId;
+const redirectUrl = config.redirectUrl; // Auto-generated or from env
+
+// Environment checks
+if (config.isDevelopment) {
+  console.log("Running in development mode");
+}
+```
+
 ### Environment Variables
 
 ```env
-# OAuth Configuration
-VITE_GOOGLE_CLIENT_ID=your_google_client_id
-VITE_REDIRECT_URL=http://localhost:5173/auth/callback
+# ============================================================================
+# REQUIRED CONFIGURATION
+# ============================================================================
 
-# ZK Prover Service
-VITE_ZK_PROVER_URL=https://prover-dev.mystenlabs.com/v1
+# Google OAuth Configuration
+VITE_GOOGLE_CLIENT_ID=your_google_client_id_here
 
-# Salt Service Configuration
-VITE_USE_BACKEND_SALT_SERVICE=false  # Set to 'true' for production
-VITE_SALT_SERVICE_URL=https://api.yourapp.com  # Your backend salt service URL
+# ============================================================================
+# OPTIONAL CONFIGURATION (with defaults)
+# ============================================================================
 
-# Sui Network
-VITE_SUI_RPC_URL=https://fullnode.devnet.sui.io:443
+# Redirect URL (auto-generated if not provided)
+# VITE_REDIRECT_URL=http://localhost:5173/auth/callback
+
+# ZK Prover Service (default: https://prover-dev.mystenlabs.com/v1)
+# VITE_ZK_PROVER_URL=https://prover-dev.mystenlabs.com/v1
+
+# Sui Network (default: https://fullnode.devnet.sui.io:443)
+# VITE_SUI_RPC_URL=https://fullnode.devnet.sui.io:443
+
+# Explorer URLs (optional)
+# VITE_EXPLORER_OBJECT_BASE_URL=https://suiscan.xyz/devnet/object
+
+# ============================================================================
+# PRODUCTION CONFIGURATION
+# ============================================================================
+
+# Salt Service (for production)
+# VITE_USE_BACKEND_SALT_SERVICE=true
+# VITE_SALT_SERVICE_URL=https://api.yourapp.com/salt
+
+# Logging (optional)
+# VITE_LOG_LEVEL=info
+
+# ============================================================================
+# DEVELOPMENT CONFIGURATION
+# ============================================================================
+
+# Development mode is automatically detected
+# No additional configuration needed for local development
 ```
 
-### Google OAuth Setup
+### Configuration Schema
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing
-3. Enable Google+ API
-4. Create OAuth 2.0 credentials
-5. Add authorized redirect URI: `http://localhost:5173/auth/callback`
-6. Copy Client ID to your `.env` file
+The configuration system validates the following schema:
+
+```typescript
+interface Config {
+  // OAuth Configuration
+  googleClientId: string; // Required
+  redirectUrl: string; // Auto-generated or from env
+
+  // ZK Prover Service
+  proverUrl: string; // Default: prover-dev.mystenlabs.com
+
+  // Salt Service Configuration
+  useBackendSaltService: boolean; // Default: false
+  saltServiceUrl?: string; // Optional
+
+  // Sui Blockchain Configuration
+  suiRpcUrl: string; // Default: fullnode.devnet.sui.io
+
+  // Explorer Configuration
+  explorerObjectBaseUrl?: string; // Optional
+
+  // Development Configuration
+  isDevelopment: boolean; // Auto-detected
+  logLevel: "debug" | "info" | "warn" | "error"; // Default: info
+}
+```
+
+### Configuration Validation
+
+The system provides built-in validation helpers:
+
+```typescript
+import { validateProductionConfig, getConfigSummary } from "./config";
+
+// Validate production readiness
+const validation = validateProductionConfig();
+if (!validation.isValid) {
+  console.error("Configuration issues:", validation.issues);
+}
+
+// Get safe configuration summary for debugging
+const summary = getConfigSummary();
+console.log("Configuration:", summary);
+```
+
+### Quick Setup
+
+1. **Copy environment template**:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Configure Google OAuth**:
+
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select existing
+   - Enable Google+ API
+   - Create OAuth 2.0 credentials
+   - Add authorized redirect URI: `http://localhost:5173/auth/callback` (or your domain)
+   - Copy Client ID to `.env` file
+
+3. **Start development**:
+   ```bash
+   npm run dev
+   ```
+
+The system will automatically:
+
+- Generate redirect URLs based on your domain
+- Use sensible defaults for all optional configuration
+- Validate configuration on startup
 
 ## 🚨 Security Best Practices
 
