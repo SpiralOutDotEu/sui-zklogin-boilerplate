@@ -26,7 +26,7 @@ const VARIANTS = {
   primary: 'bg-blue-600 hover:bg-blue-700 text-white',
   secondary: 'bg-gray-600 hover:bg-gray-700 text-white',
   danger: 'bg-red-600 hover:bg-red-700 text-white',
-  ghost: 'bg-transparent hover:bg-gray-100 text-gray-700',
+  ghost: 'bg-transparent hover:bg-gray-100 text-white border border-gray-300 hover:border-gray-400',
 } as const;
 
 const SIZES = {

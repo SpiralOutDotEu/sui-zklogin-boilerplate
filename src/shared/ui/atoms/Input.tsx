@@ -52,7 +52,7 @@ export default function Input({
   const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
 
   const baseClasses =
-    'block border rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+    'block border rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black';
   const sizeClasses = SIZES[size];
   const widthClasses = fullWidth ? 'w-full' : '';
   const errorClasses = error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300';
