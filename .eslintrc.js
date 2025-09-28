@@ -1,0 +1,62 @@
+module.exports = {
+  files: ['src/**/*.{ts,tsx}'],
+  languageOptions: {
+    parser: require('@typescript-eslint/parser'),
+    parserOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      ecmaFeatures: {
+        jsx: true,
+      },
+    },
+    globals: {
+      console: 'readonly',
+      window: 'readonly',
+      document: 'readonly',
+      navigator: 'readonly',
+      localStorage: 'readonly',
+      sessionStorage: 'readonly',
+      fetch: 'readonly',
+      crypto: 'readonly',
+      URL: 'readonly',
+      URLSearchParams: 'readonly',
+      FormData: 'readonly',
+      File: 'readonly',
+      Blob: 'readonly',
+      AbortController: 'readonly',
+      AbortSignal: 'readonly',
+      setTimeout: 'readonly',
+      clearTimeout: 'readonly',
+      setInterval: 'readonly',
+      clearInterval: 'readonly',
+      requestAnimationFrame: 'readonly',
+      cancelAnimationFrame: 'readonly',
+      import: 'readonly',
+      'import.meta': 'readonly',
+    },
+  },
+  plugins: {
+    '@typescript-eslint': require('@typescript-eslint/eslint-plugin'),
+    react: require('eslint-plugin-react'),
+    'react-hooks': require('eslint-plugin-react-hooks'),
+    prettier: require('eslint-plugin-prettier'),
+  },
+  rules: {
+    'prettier/prettier': 'error',
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    '@typescript-eslint/explicit-function-return-type': 'off',
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/no-explicit-any': 'warn',
+    'react/react-in-jsx-scope': 'off',
+    'react/prop-types': 'off',
+    'prefer-const': 'error',
+    'no-var': 'error',
+    'no-console': 'warn',
+  },
+  settings: {
+    react: {
+      version: 'detect',
+    },
+  },
+};
+
