@@ -1,5 +1,6 @@
 import React from 'react';
 import { Avatar, CopyButton } from '../atoms';
+import { BalanceCard } from './BalanceCard';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -22,6 +23,8 @@ interface AccountCardProps {
   className?: string;
   /** Callback when address is copied */
   onAddressCopied?: () => void;
+  /** Callback when faucet request completes (success or error) */
+  onFaucetComplete?: (success: boolean) => void;
 }
 
 // ============================================================================
@@ -66,6 +69,7 @@ export default function AccountCard({
   avatarSize = 48,
   className = '',
   onAddressCopied,
+  onFaucetComplete,
 }: AccountCardProps) {
   // ============================================================================
   // RENDER
@@ -95,22 +99,14 @@ export default function AccountCard({
           />
         </div>
 
-        {/* Balance */}
-        <div className={STYLES.infoCard}>
-          <h3 className={STYLES.infoTitle}>Balance</h3>
-          <div className={STYLES.balanceText}>
-            {balanceLoading ? (
-              <div className={STYLES.loadingContainer}>
-                <div className='w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin'></div>
-                <span className='text-sm'>Loading...</span>
-              </div>
-            ) : balance ? (
-              `${balance} SUI`
-            ) : (
-              <span className={STYLES.errorText}>Unable to fetch</span>
-            )}
-          </div>
-        </div>
+        {/* Balance with Faucet */}
+        <BalanceCard
+          address={address}
+          balance={balance}
+          balanceLoading={balanceLoading}
+          title='Balance'
+          onFaucetComplete={onFaucetComplete}
+        />
       </div>
     </div>
   );
