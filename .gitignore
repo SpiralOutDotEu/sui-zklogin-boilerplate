@@ -131,6 +131,7 @@ out/
 
 # Cursor IDE
 .cursor/
+.cursorignore
 
 # Sublime Text
 *.sublime-project

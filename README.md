@@ -48,6 +48,13 @@ pnpm dev
 
 Open http://localhost:5173 and click **Connect Wallet** to start the zkLogin flow.
 
+### Available Pages
+
+- **Home** (`/`) - Landing page with wallet connection
+- **Profile** (`/profile`) - User profile and account details
+- **Test Transaction** (`/test_tx`) - Transaction testing interface
+- **UI Gallery** (`/gallery`) - Component showcase and design system reference
+
 ## 🔐 Understanding zkLogin
 
 ### What is zkLogin?
@@ -179,12 +186,12 @@ Here's exactly what happens when a user interacts with the zkLogin system:
 
 - We create a function that combines ephemeral signature with ZK proof:
   ```typescript
-  getSignature = (userSignature) => {
+  getSignature = userSignature => {
     const addressSeed = genAddressSeed(
-      BigInt("91936285553024866288626620632023329301"),
-      "sub",
-      "184318064133009290952",
-      "YOUR_CLIENT_ID.apps.googleusercontent.com"
+      BigInt('91936285553024866288626620632023329301'),
+      'sub',
+      '184318064133009290952',
+      'YOUR_CLIENT_ID.apps.googleusercontent.com'
     );
     return getZkLoginSignature({
       inputs: { ...proof, addressSeed },
@@ -236,84 +243,166 @@ Here's exactly what happens when a user interacts with the zkLogin system:
 
 ```
 src/
-├── services/                   # 🏢 Service Layer (Business Logic)
-│   ├── zkLoginService.ts       # Main zkLogin service with OAuth & crypto ops
-│   └── saltService.ts          # Salt management (demo + backend implementations)
-├── state/
-│   └── ZkLoginProvider.tsx     # React Context for zkLogin state
-├── store/
-│   └── zkLoginStore.ts         # Zustand store (thin layer, delegates to services)
-├── hooks/
-│   └── useCrossTabSync.ts      # Cross-tab synchronization
-├── routes/
-│   ├── Home.tsx                # Landing page
-│   ├── Profile.tsx             # User profile page
-│   ├── TestTx.tsx              # Transaction testing
-│   └── auth/
-│       └── AuthCallback.tsx    # OAuth callback handler
-├── ui/
-│   ├── AppLayout.tsx           # Main layout component
-│   ├── Avatar.tsx              # User avatar generation component
-│   ├── ConnectWalletButton.tsx # Wallet connection button
-│   ├── DropdownMenu.tsx        # Reusable dropdown menu component
-│   ├── Navbar.tsx              # Navigation bar component
-│   └── UserWalletButton.tsx    # Connected user wallet button
-├── utils/
-│   └── cookieStorage.ts        # Cookie-based storage utilities
-├── sui/
-│   └── client.ts               # Sui client configuration
+├── app/                        # 🎯 Application Layer (App-specific components)
+│   ├── components/             # App-level components
+│   │   ├── Home.tsx            # Landing page component
+│   │   ├── Navbar.tsx          # Navigation bar component
+│   │   └── index.ts            # Barrel exports
+│   ├── layouts/                # Layout components
+│   │   ├── AppLayout.tsx       # Main application layout
+│   │   └── index.ts            # Barrel exports
+│   ├── providers/              # App-level providers
+│   │   ├── ErrorBoundary.tsx   # Error boundary component
+│   │   ├── NotificationProvider.tsx # Notification system
+│   │   └── index.ts            # Barrel exports
+│   └── index.ts                # Main app exports
+├── features/                   # 🚀 Feature Modules (Domain-specific)
+│   ├── auth/                   # Authentication feature
+│   │   ├── hooks/              # Auth-specific hooks
+│   │   │   ├── useCrossTabSync.ts # Cross-tab synchronization
+│   │   │   ├── ZkLoginProvider.tsx # React Context provider
+│   │   │   └── index.ts        # Barrel exports
+│   │   ├── routes/             # Auth-specific routes
+│   │   │   ├── AuthCallback.tsx # OAuth callback handler
+│   │   │   └── index.ts        # Barrel exports
+│   │   ├── services/           # Auth business logic
+│   │   │   ├── zkLoginService.ts # Main zkLogin service
+│   │   │   ├── saltService.ts  # Salt management service
+│   │   │   └── index.ts        # Barrel exports
+│   │   ├── store/              # Auth state management
+│   │   │   ├── zkLoginStore.ts # Zustand store
+│   │   │   └── index.ts        # Barrel exports
+│   │   ├── types.ts            # Auth-specific types
+│   │   └── index.ts            # Feature barrel exports
+│   ├── profile/                # User profile feature
+│   │   ├── routes/             # Profile routes
+│   │   │   ├── Profile.tsx     # Profile page component
+│   │   │   └── index.ts        # Barrel exports
+│   │   └── index.ts            # Feature barrel exports
+│   ├── transactions/           # Transaction feature
+│   │   ├── routes/             # Transaction routes
+│   │   │   ├── TestTx.tsx      # Transaction testing page
+│   │   │   └── index.ts        # Barrel exports
+│   │   ├── services/           # Transaction services
+│   │   └── index.ts            # Feature barrel exports
+│   └── gallery/                # UI component gallery feature
+│       ├── routes/             # Gallery routes
+│       │   ├── UIGallery.tsx   # Component showcase page
+│       │   └── index.ts        # Barrel exports
+│       └── index.ts            # Feature barrel exports
+├── shared/                     # 🔧 Shared Utilities (Reusable across features)
+│   ├── lib/                    # Core libraries
+│   │   ├── errors.ts           # Error handling utilities
+│   │   ├── http.ts             # HTTP client utilities
+│   │   ├── result.ts           # Result type utilities
+│   │   ├── sui/                # Sui blockchain utilities
+│   │   │   └── client.ts       # Sui client configuration
+│   │   └── index.ts            # Barrel exports
+│   ├── ui/                     # Shared UI components (Atomic Design)
+│   │   ├── atoms/              # Basic building blocks
+│   │   │   ├── Avatar.tsx      # User avatar component
+│   │   │   ├── Button.tsx      # Button component
+│   │   │   ├── Icon.tsx        # Icon component
+│   │   │   ├── Input.tsx       # Input component
+│   │   │   ├── LoadingSpinner.tsx # Loading spinner
+│   │   │   └── index.ts        # Barrel exports
+│   │   ├── molecules/          # Simple combinations
+│   │   │   ├── ConnectWalletButton.tsx # Wallet connection button
+│   │   │   ├── DropdownMenu.tsx # Dropdown menu component
+│   │   │   ├── NotificationItem.tsx # Notification item
+│   │   │   └── index.ts        # Barrel exports
+│   │   ├── organisms/          # Complex components
+│   │   │   ├── UserWalletButton.tsx # User wallet display
+│   │   │   ├── NotificationContainer.tsx # Notification system
+│   │   │   └── index.ts        # Barrel exports
+│   │   ├── README.md           # UI component guidelines
+│   │   └── index.ts            # Main UI exports
+│   ├── utils/                  # Utility functions
+│   │   ├── cookieStorage.ts    # Cookie-based storage utilities
+│   │   └── index.ts            # Barrel exports
+│   └── index.ts                # Main shared exports
+├── config/                     # ⚙️ Configuration Management
+│   └── index.ts                # Centralized configuration with Zod validation
 ├── main.tsx                    # Application entry point
-├── index.css                   # Global styles
-└── types.ts                    # Centralized TypeScript type definitions
+└── index.css                   # Global styles
 ```
 
 ### Architecture Layers
 
 ```mermaid
 graph TB
-    subgraph "Presentation Layer"
-        A[React Components]
-        B[UI Components]
-        C[Routes]
+    subgraph "🎯 Application Layer"
+        A[App Components]
+        B[App Layouts]
+        C[App Providers]
+        D[Feature Routes]
     end
 
-    subgraph "State Management Layer"
-        D[ZkLoginProvider]
-        E[ZkLoginStore]
-        F[Cross-tab Sync]
+    subgraph "🚀 Feature Modules"
+        E[Auth Feature]
+        F[Profile Feature]
+        G[Transactions Feature]
+        H[Feature Hooks]
+        I[Feature Services]
+        J[Feature Stores]
     end
 
-    subgraph "Service Layer"
-        G[ZkLoginService]
-        H[SaltService]
-        I[Demo Salt Service]
-        J[Backend Salt Service]
+    subgraph "🔧 Shared Layer"
+        K[UI Components<br/>Atomic Design]
+        L[Core Libraries]
+        M[Utilities]
+        N[Configuration]
     end
 
-    subgraph "Infrastructure Layer"
-        K[Cookie Storage]
-        L[Sui Client]
-        M[External APIs]
+    subgraph "🏢 Service Layer"
+        O[ZkLoginService]
+        P[SaltService]
+        Q[Demo Salt Service]
+        R[Backend Salt Service]
     end
 
-    A --> D
-    B --> D
-    C --> D
+    subgraph "🌐 Infrastructure Layer"
+        S[Cookie Storage]
+        T[Sui Client]
+        U[External APIs]
+        V[HTTP Client]
+    end
+
+    A --> E
+    B --> E
+    C --> E
     D --> E
-    E --> G
+    E --> H
+    E --> I
+    E --> J
+    F --> H
+    F --> I
+    F --> J
     G --> H
-    H --> I
-    H --> J
-    G --> K
-    G --> L
-    G --> M
+    G --> I
+    G --> J
+    H --> O
+    I --> O
+    J --> O
+    O --> P
+    P --> Q
+    P --> R
+    O --> S
+    O --> T
+    O --> U
+    O --> V
+    K --> A
+    L --> I
+    M --> I
+    N --> I
 ```
 
 ### Service-Oriented Data Flow
 
 ```mermaid
 sequenceDiagram
-    participant C as Component
+    participant C as App Component
+    participant F as Feature Module
     participant P as ZkLoginProvider
     participant S as ZkLoginStore
     participant ZS as ZkLoginService
@@ -321,15 +410,19 @@ sequenceDiagram
     participant G as Google OAuth
     participant ZP as ZK Prover
     participant SC as Sui Client
+    participant CFG as Config
 
-    C->>P: useZkLogin()
+    C->>F: Feature-specific component
+    F->>P: useZkLogin()
     P->>S: Store actions
     S->>ZS: Service calls
+    ZS->>CFG: Get configuration
 
     Note over ZS: ZKLOGIN STEP 1-5: OAuth Initiation
     ZS->>G: Redirect to OAuth
     G->>C: User authenticates
-    C->>P: OAuth callback
+    C->>F: OAuth callback
+    F->>P: completeLogin()
     P->>S: completeLogin()
     S->>ZS: completeLogin()
 
@@ -344,16 +437,19 @@ sequenceDiagram
     ZP->>ZS: Return proof
     ZS->>S: Return success
     S->>P: Update state
-    P->>C: User authenticated
+    P->>F: User authenticated
+    F->>C: Update UI
 
     Note over ZS: ZKLOGIN STEP 10-11: Transaction Signing
-    C->>P: ensureZkSession()
+    C->>F: ensureZkSession()
+    F->>P: ensureZkSession()
     P->>S: ensureZkSession()
     S->>ZS: createSession()
     ZS->>ZS: Create signature function
     ZS->>S: Return session
     S->>P: Return session
-    P->>C: Ready for transactions
+    P->>F: Return session
+    F->>C: Ready for transactions
 ```
 
 ### Data Flow Architecture
@@ -393,17 +489,28 @@ graph LR
 
 ## 🏢 Service Architecture
 
-### Service Layer Pattern
+### Feature-Based Service Layer Pattern
 
-This project follows a **Service Layer Pattern** that separates business logic from state management:
+This project follows a **Feature-Based Service Layer Pattern** that organizes business logic by domain features while maintaining clear separation of concerns:
 
-#### **ZkLoginService** - Main Business Logic
+#### **Feature Module Structure**
+
+Each feature module (`features/*/`) contains its own service layer:
+
+- **`services/`**: Business logic and external API interactions
+- **`store/`**: State management (thin layer over services)
+- **`hooks/`**: React integration and cross-cutting concerns
+- **`routes/`**: Feature-specific UI components
+- **`types.ts`**: Feature-specific type definitions
+
+#### **ZkLoginService** - Authentication Business Logic
 
 - **OAuth Flow Management**: Handles Google OAuth initiation and completion
 - **Cryptographic Operations**: Manages ephemeral keypairs, nonce generation, address derivation
 - **ZK Proof Generation**: Communicates with ZK prover service
 - **Session Creation**: Creates zkLogin sessions for transaction signing
 - **Error Handling**: Returns structured results instead of throwing exceptions
+- **Configuration Integration**: Uses centralized config system with Zod validation
 
 #### **SaltService** - Salt Management
 
@@ -411,28 +518,224 @@ This project follows a **Service Layer Pattern** that separates business logic f
 - **Backend Implementation**: Production-ready backend salt service
 - **Strategy Pattern**: Easy switching between implementations via configuration
 - **Consistent API**: Same interface regardless of implementation
+- **Dependency Injection**: Injected into ZkLoginService for testability
 
-#### **Benefits of Service Architecture**
+#### **Shared Services** - Cross-Feature Utilities
 
-- ✅ **Separation of Concerns**: Business logic separated from UI and state
+- **HTTP Client**: Centralized HTTP communication with error handling
+- **Error Handling**: Structured error types and result patterns
+- **Configuration**: Centralized config with validation and type safety
+- **Sui Client**: Blockchain interaction utilities
+
+#### **Benefits of Feature-Based Service Architecture**
+
+- ✅ **Domain Separation**: Each feature owns its business logic
+- ✅ **Scalability**: Easy to add new features without affecting existing ones
 - ✅ **Testability**: Services can be easily mocked and tested independently
 - ✅ **Reusability**: Services can be used outside of React components
 - ✅ **Maintainability**: Clear boundaries and single responsibility
-- ✅ **Configuration**: Environment-based service selection
+- ✅ **Configuration**: Environment-based service selection with type safety
+- ✅ **Dependency Injection**: Services can be easily swapped for testing
+
+## 🚨 Error Handling Architecture
+
+### Structured Error System
+
+This project implements a comprehensive error handling system that provides type-safe, consistent error management across all layers:
+
+#### **AppError Type System**
+
+```typescript
+// Centralized error types
+export type AppErrorKind =
+  | 'Network'
+  | 'Timeout'
+  | 'Unauthorized'
+  | 'Forbidden'
+  | 'NotFound'
+  | 'RateLimited'
+  | 'Validation'
+  | 'Server'
+  | 'Unknown'
+  | 'ZkLogin'
+  | 'OAuth'
+  | 'SaltService'
+  | 'JWT';
+
+export type AppError = {
+  kind: AppErrorKind;
+  message: string; // user-safe message
+  status?: number; // http status
+  cause?: unknown; // raw error for logging
+  details?: unknown; // field errors, etc.
+};
+```
+
+#### **Result Pattern**
+
+The application uses a `Result<T, E>` type for handling success/failure cases without throwing exceptions:
+
+```typescript
+// Service methods return Result types
+async method(): Promise<Result<DataType, AppError>> {
+  try {
+    // Business logic
+    return ok(data);
+  } catch (error) {
+    return err(createAppError('Service', 'Operation failed', { cause: error }));
+  }
+}
+
+// Usage in components
+const result = await service.method();
+if (result.ok) {
+  // Handle success: result.data
+} else {
+  // Handle error: result.error
+}
+```
+
+#### **Error Boundary Integration**
+
+```typescript
+// App-level error boundary with structured error handling
+<ErrorBoundary
+  onError={(error, errorInfo) => {
+    // Convert to AppError for consistent handling
+    const appError = toAppError(error);
+    // Send to error reporting service
+    console.error('Application error:', appError, errorInfo);
+  }}
+>
+  <App />
+</ErrorBoundary>
+```
+
+#### **Notification System Integration**
+
+```typescript
+// Automatic error display through notification system
+const { showError, showSuccess } = useNotifications();
+
+// Services automatically convert errors to user-friendly messages
+const result = await service.method();
+if (!result.ok) {
+  showError(result.error); // Displays user-friendly error message
+}
+```
+
+## 🎭 Provider Architecture
+
+### Layered Provider System
+
+The application uses a carefully orchestrated provider hierarchy that provides cross-cutting concerns:
+
+#### **Provider Hierarchy** (from main.tsx)
+
+```typescript
+<ErrorBoundary>           // 1. Error boundary (outermost)
+  <NotificationProvider>  // 2. Notification system
+    <ZkLoginProvider>     // 3. Authentication state
+      <RouterProvider />  // 4. Routing (innermost)
+    </ZkLoginProvider>
+  </NotificationProvider>
+</ErrorBoundary>
+```
+
+#### **ErrorBoundary Provider**
+
+- **Purpose**: Catches JavaScript errors anywhere in the component tree
+- **Features**:
+  - Graceful error fallback UI
+  - Development error details
+  - Error reporting integration
+  - Recovery mechanisms
+
+```typescript
+<ErrorBoundary
+  onError={(error, errorInfo) => {
+    // Production error reporting
+    console.error('Application error:', error, errorInfo);
+  }}
+  fallback={(error, resetError) => (
+    <CustomErrorFallback error={error} onReset={resetError} />
+  )}
+>
+  {children}
+</ErrorBoundary>
+```
+
+#### **NotificationProvider**
+
+- **Purpose**: Centralized notification system for user feedback
+- **Features**:
+  - Toast notifications
+  - Error display integration
+  - Success/warning/info messages
+  - Auto-dismiss functionality
+
+```typescript
+const { showError, showSuccess, showWarning, showInfo } = useNotifications();
+
+// Automatic error handling
+showError(appError); // Displays user-friendly error message
+
+// Success feedback
+showSuccess('Login Successful', 'Welcome back!');
+```
+
+#### **ZkLoginProvider**
+
+- **Purpose**: Authentication state management
+- **Features**:
+  - OAuth flow management
+  - Session restoration
+  - Cross-tab synchronization
+  - Transaction signing capabilities
+
+```typescript
+const { account, loginWithProvider, ensureZkSession } = useZkLogin();
+```
+
+#### **Provider Benefits**
+
+- ✅ **Separation of Concerns**: Each provider handles specific functionality
+- ✅ **Error Isolation**: Errors in one provider don't crash others
+- ✅ **Consistent UX**: Centralized error handling and notifications
+- ✅ **Development Experience**: Clear error boundaries and debugging
+- ✅ **Production Ready**: Graceful error recovery and reporting
 
 ### Service Configuration
 
 ```typescript
-// Environment-based service configuration
-const config: ZkLoginServiceConfig = {
-  googleClientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-  redirectUrl: import.meta.env.VITE_REDIRECT_URL,
-  proverUrl: import.meta.env.VITE_ZK_PROVER_URL,
-  useBackendSaltService:
-    import.meta.env.VITE_USE_BACKEND_SALT_SERVICE === "true",
-  saltServiceUrl: import.meta.env.VITE_SALT_SERVICE_URL,
-};
+// Centralized configuration with Zod validation
+import { getConfig } from '@/config';
+
+const configResult = getConfig();
+if (configResult.ok) {
+  const config = configResult.data;
+  // Type-safe access to all configuration values
+  const zkLoginService = createZkLoginService({
+    googleClientId: config.googleClientId,
+    redirectUrl: config.redirectUrl,
+    proverUrl: config.proverUrl,
+    useBackendSaltService: config.useBackendSaltService,
+    saltServiceUrl: config.saltServiceUrl,
+    suiRpcUrl: config.suiRpcUrl,
+  });
+} else {
+  // Handle configuration errors gracefully
+  console.error('Configuration error:', configResult.error.message);
+}
 ```
+
+#### **Configuration Features**
+
+- **Type Safety**: Full TypeScript support with Zod validation
+- **Runtime Validation**: Configuration errors caught at startup
+- **Dynamic URLs**: Redirect URLs generated from current domain
+- **Environment Detection**: Automatic development/production detection
+- **Error Handling**: Structured error reporting for missing configuration
 
 ## 🔄 zkLogin Implementation Details
 
@@ -560,14 +863,14 @@ interface SaltServiceData {
 
 ```typescript
 // Backend salt service endpoint
-app.post("/api/salt", async (req, res) => {
+app.post('/api/salt', async (req, res) => {
   const { jwt } = req.body;
   const decoded = jwtDecode(jwt);
 
   // Verify JWT signature
   const isValid = await verifyJWT(jwt);
   if (!isValid) {
-    return res.status(401).json({ error: "Invalid JWT" });
+    return res.status(401).json({ error: 'Invalid JWT' });
   }
 
   // Generate or retrieve salt
@@ -586,14 +889,14 @@ app.post("/api/salt", async (req, res) => {
 ```typescript
 // Update getOrCreateSalt in zkLoginStore.ts
 getOrCreateSalt: async (decoded: JwtPayload): Promise<string> => {
-  const key = "zk_user_salt";
+  const key = 'zk_user_salt';
   let salt = persistentCookieStorage.getItem(key);
 
   if (!salt) {
     // Call your custom salt service
-    const response = await fetch("/api/salt", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const response = await fetch('/api/salt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ jwt: idToken }),
     });
 
@@ -634,6 +937,7 @@ This project uses a **centralized configuration system** with Zod validation tha
 - ✅ **Environment variable validation** with clear error messages
 - ✅ **Default values** for optional configuration
 - ✅ **Configuration summary** for debugging
+- ✅ **Result-based error handling** for graceful failures
 
 ### Configuration Features
 
@@ -659,16 +963,38 @@ saltServiceUrl: Invalid salt service URL
 #### **Configuration Access**
 
 ```typescript
-import { config } from "./config";
+import { getConfig } from '@/config';
 
-// Type-safe access
-const clientId = config.googleClientId;
-const redirectUrl = config.redirectUrl; // Auto-generated or from env
+// Type-safe access with error handling
+const configResult = getConfig();
+if (configResult.ok) {
+  const config = configResult.data;
+  console.log(config.googleClientId);
+  console.log(config.redirectUrl); // Auto-generated or from env
 
-// Environment checks
-if (config.isDevelopment) {
-  console.log("Running in development mode");
+  // Environment checks
+  if (config.isDevelopment) {
+    console.log('Running in development mode');
+  }
+} else {
+  console.error('Configuration error:', configResult.error.message);
 }
+```
+
+#### **Configuration Validation Helpers**
+
+```typescript
+import { validateProductionConfig, getConfigSummary } from '@/config';
+
+// Validate production readiness
+const validation = validateProductionConfig();
+if (!validation.isValid) {
+  console.error('Configuration issues:', validation.issues);
+}
+
+// Get safe configuration summary for debugging
+const summary = getConfigSummary();
+console.log('Configuration:', summary);
 ```
 
 ### Environment Variables
@@ -741,7 +1067,7 @@ interface Config {
 
   // Development Configuration
   isDevelopment: boolean; // Auto-detected
-  logLevel: "debug" | "info" | "warn" | "error"; // Default: info
+  logLevel: 'debug' | 'info' | 'warn' | 'error'; // Default: info
 }
 ```
 
@@ -750,17 +1076,17 @@ interface Config {
 The system provides built-in validation helpers:
 
 ```typescript
-import { validateProductionConfig, getConfigSummary } from "./config";
+import { validateProductionConfig, getConfigSummary } from './config';
 
 // Validate production readiness
 const validation = validateProductionConfig();
 if (!validation.isValid) {
-  console.error("Configuration issues:", validation.issues);
+  console.error('Configuration issues:', validation.issues);
 }
 
 // Get safe configuration summary for debugging
 const summary = getConfigSummary();
-console.log("Configuration:", summary);
+console.log('Configuration:', summary);
 ```
 
 ### Quick Setup
@@ -772,7 +1098,6 @@ console.log("Configuration:", summary);
    ```
 
 2. **Configure Google OAuth**:
-
    - Go to [Google Cloud Console](https://console.cloud.google.com/)
    - Create a new project or select existing
    - Enable Google+ API
@@ -830,47 +1155,81 @@ This section provides comprehensive guidelines for maintaining and extending the
 
 ### 🏗️ Architecture Overview
 
-The project follows a **Service Layer + State Management + React Context** pattern:
+The project follows a **Feature-Based + Atomic Design + Service Layer** pattern:
 
 ```mermaid
 graph TB
-    subgraph "Presentation Layer"
-        A[React Components]
-        B[UI Components]
-        C[Routes]
+    subgraph "🎯 Application Layer"
+        A[App Components]
+        B[App Layouts]
+        C[App Providers]
     end
 
-    subgraph "State Management Layer"
-        D[ZkLoginProvider]
-        E[ZkLoginStore]
-        F[Cross-tab Sync]
+    subgraph "🚀 Feature Modules"
+        D[Feature Components]
+        E[Feature Hooks]
+        F[Feature Services]
+        G[Feature Stores]
     end
 
-    subgraph "Service Layer"
-        G[ZkLoginService]
-        H[SaltService]
+    subgraph "🔧 Shared Layer"
+        H[UI Components<br/>Atomic Design]
+        I[Core Libraries]
+        J[Utilities]
+        K[Configuration]
     end
 
-    subgraph "Infrastructure Layer"
-        I[Cookie Storage]
-        J[Sui Client]
-        K[External APIs]
+    subgraph "🏢 Service Layer"
+        L[ZkLoginService]
+        M[SaltService]
+        N[HTTP Client]
+    end
+
+    subgraph "🌐 Infrastructure Layer"
+        O[Cookie Storage]
+        P[Sui Client]
+        Q[External APIs]
     end
 
     A --> D
     B --> D
     C --> D
     D --> E
-    E --> G
-    G --> H
-    G --> I
-    G --> J
-    G --> K
+    E --> F
+    F --> G
+    F --> L
+    L --> M
+    L --> N
+    H --> A
+    I --> F
+    J --> F
+    K --> F
+    L --> O
+    L --> P
+    L --> Q
 ```
 
 ### 📁 File Organization Patterns
 
-#### **Service Layer** (`src/services/`)
+#### **Feature Modules** (`src/features/*/`)
+
+Each feature module follows a consistent structure:
+
+- **Purpose**: Domain-specific functionality with clear boundaries
+- **Pattern**: Self-contained modules with internal organization
+- **Naming**: `{feature}/` (e.g., `auth/`, `profile/`, `transactions/`)
+- **Structure**:
+  ```
+  features/auth/
+  ├── hooks/           # React integration and cross-cutting concerns
+  ├── routes/          # Feature-specific UI components
+  ├── services/        # Business logic and external API interactions
+  ├── store/           # State management (thin layer over services)
+  ├── types.ts         # Feature-specific type definitions
+  └── index.ts         # Feature barrel exports
+  ```
+
+#### **Service Layer** (`src/features/*/services/`)
 
 - **Purpose**: Pure business logic and external API interactions
 - **Pattern**: Class-based services with dependency injection
@@ -890,7 +1249,7 @@ graph TB
   }
   ```
 
-#### **State Management** (`src/store/`)
+#### **State Management** (`src/features/*/store/`)
 
 - **Purpose**: Thin state management wrapper over services
 - **Pattern**: Zustand store with custom storage
@@ -909,12 +1268,12 @@ graph TB
           if (result.success) set({ data: result.data });
         },
       }),
-      { name: "feature-storage", storage: createCustomStorage() }
+      { name: 'feature-storage', storage: createCustomStorage() }
     )
   );
   ```
 
-#### **React Integration** (`src/state/`)
+#### **React Integration** (`src/features/*/hooks/`)
 
 - **Purpose**: Bridge between React and state management
 - **Pattern**: React Context + custom hook
@@ -938,7 +1297,46 @@ graph TB
   }
   ```
 
+#### **Shared Layer** (`src/shared/`)
+
+- **Purpose**: Reusable utilities and components across features
+- **Pattern**: Atomic Design for UI components
+- **Structure**:
+  ```
+  shared/
+  ├── lib/             # Core libraries (errors, http, result, sui)
+  ├── ui/              # UI components (atoms, molecules, organisms)
+  ├── utils/           # Utility functions
+  └── index.ts         # Main shared exports
+  ```
+
+#### **Application Layer** (`src/app/`)
+
+- **Purpose**: App-specific components and providers
+- **Pattern**: High-level app structure and layout
+- **Structure**:
+  ```
+  app/
+  ├── components/      # App-level components
+  ├── layouts/         # Layout components
+  ├── providers/       # App-level providers
+  └── index.ts         # Main app exports
+  ```
+
 ### 🎨 UI Component Styling Guide
+
+#### **UI Gallery - Component Showcase**
+
+The application includes a comprehensive UI Gallery (`/gallery`) that showcases all available shared components:
+
+- **Purpose**: Interactive component documentation and design system reference
+- **Features**:
+  - Live component demonstrations with multiple variants
+  - Code examples for each component
+  - Size and state variations
+  - Copy-paste ready code snippets
+- **Organization**: Components organized by Atomic Design principles (Atoms, Molecules, Organisms)
+- **Access**: Available at `/gallery` route in the main navigation
 
 #### **Component Structure Pattern**
 
@@ -1027,17 +1425,17 @@ export default function ComponentName({
 ```typescript
 const STYLES = {
   // Base container styles
-  container: "base-classes",
+  container: 'base-classes',
 
   // Conditional styles (use template literals for dynamic classes)
-  button: "base-classes",
-  buttonEnabled: "base-classes hover:classes",
-  buttonDisabled: "base-classes opacity-50 cursor-not-allowed",
+  button: 'base-classes',
+  buttonEnabled: 'base-classes hover:classes',
+  buttonDisabled: 'base-classes opacity-50 cursor-not-allowed',
 
   // Nested element styles
-  header: "header-classes",
-  content: "content-classes",
-  footer: "footer-classes",
+  header: 'header-classes',
+  content: 'content-classes',
+  footer: 'footer-classes',
 } as const;
 ```
 
@@ -1072,57 +1470,81 @@ background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
 
 ```typescript
 // Hover effects
-"hover:scale-105 hover:from-purple-600 hover:to-blue-600 transition-all duration-200";
+'hover:scale-105 hover:from-purple-600 hover:to-blue-600 transition-all duration-200';
 
 // Loading states
-"animate-spin"; // for spinners
-"animate-pulse-slow"; // for background effects
+'animate-spin'; // for spinners
+'animate-pulse-slow'; // for background effects
 
 // Glow effects
-"glow-effect"; // custom class for glowing elements
+'glow-effect'; // custom class for glowing elements
 ```
 
-#### **UI Folder Structure** (`src/ui/`)
+#### **UI Folder Structure** (`src/shared/ui/`)
 
-The UI folder contains reusable components following these patterns:
+The UI folder follows **Atomic Design** principles with three levels of component complexity:
 
-##### **1. Layout Components**
+##### **1. Atoms** (`src/shared/ui/atoms/`)
 
-- **`AppLayout.tsx`**: Main app wrapper with background effects
-- **`Navbar.tsx`**: Navigation with authentication state
-- **Pattern**: Layout components handle structure and positioning
+Basic building blocks that can't be broken down further:
 
-##### **2. Interactive Components**
-
-- **`ConnectWalletButton.tsx`**: OAuth login initiation
-- **`UserWalletButton.tsx`**: Connected user display with dropdown
-- **`DropdownMenu.tsx`**: Reusable dropdown with context
-- **Pattern**: Interactive components handle user actions and state
-
-##### **3. Display Components**
-
+- **`Button.tsx`**: Reusable button component with variants
+- **`Input.tsx`**: Form input component with validation states
+- **`Icon.tsx`**: Icon component with consistent sizing
 - **`Avatar.tsx`**: Deterministic avatar generation
-- **Pattern**: Display components are pure and stateless
+- **`LoadingSpinner.tsx`**: Loading indicator component
+- **Pattern**: Highly reusable, no business logic, minimal dependencies
+
+##### **2. Molecules** (`src/shared/ui/molecules/`)
+
+Simple combinations of atoms:
+
+- **`ConnectWalletButton.tsx`**: OAuth login initiation (Button + Icon)
+- **`DropdownMenu.tsx`**: Reusable dropdown with context (Button + positioning)
+- **`NotificationItem.tsx`**: Notification display (Icon + text + actions)
+- **Pattern**: Composed of 2-3 atoms, reusable across features
+
+##### **3. Organisms** (`src/shared/ui/organisms/`)
+
+Complex components made of molecules and atoms:
+
+- **`UserWalletButton.tsx`**: Connected user display with dropdown (Avatar + DropdownMenu)
+- **`NotificationContainer.tsx`**: Complete notification system (NotificationItem + positioning)
+- **Pattern**: Complex UI sections, may contain business logic
 
 ##### **Component Responsibilities**
 
-| Component             | Purpose                 | Props                                                        | State                      | Dependencies                                            |
-| --------------------- | ----------------------- | ------------------------------------------------------------ | -------------------------- | ------------------------------------------------------- |
-| `AppLayout`           | Main layout wrapper     | None                                                         | None                       | `Navbar`, `Outlet`                                      |
-| `Navbar`              | Navigation & auth state | None                                                         | None                       | `useZkLogin`, `ConnectWalletButton`, `UserWalletButton` |
-| `ConnectWalletButton` | OAuth login             | None                                                         | `isConnecting`             | `useZkLogin`                                            |
-| `UserWalletButton`    | User display & actions  | `address`, `onDisconnect`, `isMobile?`, `includeNavigation?` | `copied`, `isDropdownOpen` | `Avatar`, `DropdownMenu`                                |
-| `DropdownMenu`        | Reusable dropdown       | `trigger`, `children`, `position?`, `width?`, `isMobile?`    | `isOpen`                   | Context API                                             |
-| `Avatar`              | Address-based avatar    | `address`, `size?`, `className?`                             | None                       | `@dicebear/core`                                        |
+| Component Type | Component Name        | Purpose                | Props                              | State                      | Dependencies             |
+| -------------- | --------------------- | ---------------------- | ---------------------------------- | -------------------------- | ------------------------ |
+| **Atom**       | `Button`              | Reusable button        | `variant`, `size`, `disabled?`     | None                       | None                     |
+| **Atom**       | `Input`               | Form input             | `type`, `placeholder`, `error?`    | `focused`                  | None                     |
+| **Atom**       | `Avatar`              | Address-based avatar   | `address`, `size?`                 | None                       | `@dicebear/core`         |
+| **Molecule**   | `ConnectWalletButton` | OAuth login            | None                               | `isConnecting`             | `useZkLogin`, `Button`   |
+| **Molecule**   | `DropdownMenu`        | Reusable dropdown      | `trigger`, `children`, `position?` | `isOpen`                   | Context API              |
+| **Organism**   | `UserWalletButton`    | User display & actions | `address`, `onDisconnect?`         | `copied`, `isDropdownOpen` | `Avatar`, `DropdownMenu` |
 
 ### 🔧 Development Guidelines
 
 #### **Adding New Features**
 
-1. **Service Layer First**
+1. **Create Feature Module**
 
    ```typescript
-   // 1. Create service in src/services/
+   // 1. Create feature module in src/features/new-feature/
+   // Structure:
+   // features/new-feature/
+   // ├── hooks/
+   // ├── routes/
+   // ├── services/
+   // ├── store/
+   // ├── types.ts
+   // └── index.ts
+   ```
+
+2. **Service Layer First**
+
+   ```typescript
+   // 2. Create service in src/features/new-feature/services/
    export class NewFeatureService {
      async method(): Promise<Result> {
        /* business logic */
@@ -1130,10 +1552,10 @@ The UI folder contains reusable components following these patterns:
    }
    ```
 
-2. **Add to Store**
+3. **Add to Store**
 
    ```typescript
-   // 2. Add to store in src/store/
+   // 3. Add to store in src/features/new-feature/store/
    newFeatureService: createNewFeatureService(),
    newFeatureAction: async () => {
      const { newFeatureService } = get();
@@ -1142,21 +1564,42 @@ The UI folder contains reusable components following these patterns:
    }
    ```
 
-3. **Expose via Provider**
+4. **Expose via Provider**
 
    ```typescript
-   // 3. Add to provider in src/state/
+   // 4. Add to provider in src/features/new-feature/hooks/
    const { newFeatureAction } = useFeatureStore();
    const value = { ...store, newFeatureAction };
    ```
 
-4. **Create UI Components**
+5. **Create UI Components**
+
    ```typescript
-   // 4. Create UI components in src/ui/
+   // 5. Create UI components in src/features/new-feature/routes/
+   // Use shared UI components from src/shared/ui/
    export default function NewFeatureComponent() {
      const { newFeatureAction } = useFeature();
      // Component implementation
    }
+   ```
+
+6. **Add Error Handling**
+
+   ```typescript
+   // 6. Add error handling using Result pattern
+   const result = await newFeatureAction();
+   if (!result.ok) {
+     showError(result.error); // Uses NotificationProvider
+     return;
+   }
+   // Handle success
+   ```
+
+7. **Add to App Router**
+   ```typescript
+   // 7. Add route in src/main.tsx
+   import { NewFeatureComponent } from '@/features/new-feature';
+   // Add to router configuration
    ```
 
 #### **Component Development Checklist**
@@ -1168,6 +1611,8 @@ The UI folder contains reusable components following these patterns:
 - [ ] **Accessibility**: Include proper ARIA labels and keyboard navigation
 - [ ] **Responsive**: Test on mobile and desktop layouts
 - [ ] **Error Handling**: Include proper error states and loading states
+- [ ] **Result Pattern**: Use Result<T, E> for async operations
+- [ ] **Error Display**: Integrate with NotificationProvider for user feedback
 - [ ] **Documentation**: Add comprehensive JSDoc comments
 
 #### **Styling Best Practices**
@@ -1192,20 +1637,20 @@ The UI folder contains reusable components following these patterns:
 #### **Common Patterns**
 
 ```typescript
-// Service pattern
+// Service pattern (in features/*/services/)
 export class FeatureService {
   constructor(private config: Config) {}
-  async method(): Promise<Result> {
+  async method(): Promise<Result<DataType, AppError>> {
     try {
       // Business logic
-      return { success: true, data };
+      return ok(data);
     } catch (error) {
-      return { success: false, error: error.message };
+      return err(createAppError('Service', 'Operation failed', { cause: error }));
     }
   }
 }
 
-// Store pattern
+// Store pattern (in features/*/store/)
 export const useFeatureStore = create<FeatureState>()(
   persist(
     (set, get) => ({
@@ -1213,14 +1658,21 @@ export const useFeatureStore = create<FeatureState>()(
       action: async () => {
         const { service } = get();
         const result = await service.method();
-        if (result.success) set({ data: result.data });
+        if (result.ok) set({ data: result.data });
       },
     }),
     { name: "feature-storage", storage: createCustomStorage() }
   )
 );
 
-// Component pattern
+// Provider pattern (in features/*/hooks/)
+export function FeatureProvider({ children }: { children: React.ReactNode }) {
+  const store = useFeatureStore();
+  const value = { ...store, client: sharedClient };
+  return <FeatureCtx.Provider value={value}>{children}</FeatureCtx.Provider>;
+}
+
+// Component pattern (in features/*/routes/ or app/components/)
 export default function FeatureComponent({ prop }: Props) {
   const { action } = useFeature();
   const [state, setState] = useState(initial);
@@ -1231,17 +1683,82 @@ export default function FeatureComponent({ prop }: Props) {
 
   return <div className={STYLES.container}>Content</div>;
 }
+
+// Configuration pattern (in config/)
+const configResult = getConfig();
+if (!configResult.ok) {
+  throw new Error(`Configuration error: ${configResult.error.message}`);
+}
+const config = configResult.data;
+
+// Error handling pattern (in services/)
+export class FeatureService {
+  async method(): Promise<Result<DataType, AppError>> {
+    try {
+      const result = await this.httpClient.get('/api/data');
+      if (!result.ok) {
+        return err(result.error);
+      }
+      return ok(result.data);
+    } catch (error) {
+      return err(createAppError('Service', 'Operation failed', { cause: error }));
+    }
+  }
+}
+
+// Provider pattern (in app/providers/)
+export function FeatureProvider({ children }: { children: React.ReactNode }) {
+  const [state, setState] = useState(initialState);
+
+  const value = {
+    state,
+    actions: {
+      // Provider actions
+    }
+  };
+
+  return (
+    <FeatureContext.Provider value={value}>
+      {children}
+    </FeatureContext.Provider>
+  );
+}
+
+// Error boundary pattern (in app/providers/)
+export class ErrorBoundary extends Component<Props, State> {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    const appError = toAppError(error);
+    this.props.onError?.(appError, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback?.(this.state.error!, this.resetError) ||
+             <DefaultErrorFallback />;
+    }
+    return this.props.children;
+  }
+}
 ```
 
 #### **File Naming Conventions**
 
-- **Services**: `{feature}Service.ts`
-- **Stores**: `{feature}Store.ts`
-- **Providers**: `{Feature}Provider.tsx`
-- **Components**: `{FeatureName}.tsx` (PascalCase)
+- **Feature Services**: `features/*/services/{feature}Service.ts`
+- **Feature Stores**: `features/*/store/{feature}Store.ts`
+- **Feature Providers**: `features/*/hooks/{Feature}Provider.tsx`
+- **Feature Components**: `features/*/routes/{FeatureName}.tsx`
+- **App Components**: `app/components/{FeatureName}.tsx`
+- **App Providers**: `app/providers/{Feature}Provider.tsx`
+- **App Layouts**: `app/layouts/{Feature}Layout.tsx`
+- **UI Atoms**: `shared/ui/atoms/{FeatureName}.tsx`
+- **UI Molecules**: `shared/ui/molecules/{FeatureName}.tsx`
+- **UI Organisms**: `shared/ui/organisms/{FeatureName}.tsx`
+- **Error Types**: `shared/lib/errors.ts`
+- **Result Types**: `shared/lib/result.ts`
+- **HTTP Client**: `shared/lib/http.ts`
 - **Hooks**: `use{FeatureName}.ts`
 - **Utils**: `{feature}Utils.ts`
-- **Types**: `types.ts` (centralized)
+- **Types**: `types.ts` (per feature or shared)
 
 This styling guide ensures consistency, maintainability, and scalability as the project grows. Follow these patterns when adding new features or maintaining existing ones.
 
