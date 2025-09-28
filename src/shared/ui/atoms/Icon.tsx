@@ -19,6 +19,7 @@ import {
   LuX,
   LuTriangle,
   LuInfo,
+  LuCoins,
 } from 'react-icons/lu';
 import {
   // Material Design from react-icons
@@ -85,6 +86,8 @@ const ICON_MAP: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>
   info: LuInfo,
   'info-hero': HiInformationCircle,
   'info-md': MdInfo,
+  // Faucet icons
+  coins: LuCoins,
 };
 
 // ============================================================================
