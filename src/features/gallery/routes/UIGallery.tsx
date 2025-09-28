@@ -14,6 +14,7 @@ import {
   AccountCard,
   ConnectWalletButton,
   DropdownMenu,
+  FaucetButton,
   NotificationItem,
   SessionStatus,
   TransactionDetails,
@@ -220,6 +221,7 @@ export default function UIGallery() {
               <Button variant='ghost' size='md'>
                 Ghost
               </Button>
+              <Button variant='hero'>Hero</Button>
               <Button variant='primary' size='md' disabled>
                 Disabled
               </Button>
@@ -227,7 +229,8 @@ export default function UIGallery() {
             <div className={STYLES.codeBlock}>
               {`<Button variant="primary" size="md">Primary</Button>
 <Button variant="secondary" size="md">Secondary</Button>
-<Button variant="ghost" size="md">Ghost</Button>`}
+<Button variant="ghost" size="md">Ghost</Button>
+<Button variant="hero">Hero</Button>`}
             </div>
           </div>
         ),
@@ -688,6 +691,59 @@ export default function UIGallery() {
     message: "Transaction completed"
   }}
   onRemove={handleRemove}
+/>`}
+            </div>
+          </div>
+        ),
+      },
+      {
+        title: 'FaucetButton',
+        description: 'Request test tokens from Sui devnet faucet with loading states',
+        demo: (
+          <div className={STYLES.componentDemo}>
+            <div className='space-y-4'>
+              <div className={STYLES.demoRow}>
+                <FaucetButton
+                  address='0x1234567890abcdef1234567890abcdef12345678'
+                  buttonText='Get Test SUI'
+                  variant='primary'
+                  size='md'
+                />
+                <FaucetButton
+                  address='0x1234567890abcdef1234567890abcdef12345678'
+                  buttonText='Request Tokens'
+                  variant='secondary'
+                  size='sm'
+                />
+                <FaucetButton
+                  address='0x1234567890abcdef1234567890abcdef12345678'
+                  buttonText='Get SUI'
+                  variant='hero'
+                />
+              </div>
+              <div className={STYLES.demoRow}>
+                <FaucetButton
+                  address='0x1234567890abcdef1234567890abcdef12345678'
+                  buttonText='Full Width'
+                  variant='primary'
+                  fullWidth
+                />
+              </div>
+            </div>
+            <div className={STYLES.codeBlock}>
+              {`<FaucetButton
+  address="0x123..."
+  buttonText="Get Test SUI"
+  variant="primary"
+  size="md"
+  onComplete={(success) => console.log(success)}
+/>
+
+<FaucetButton
+  address="0x123..."
+  buttonText="Get SUI"
+  variant="hero"
+  fullWidth
 />`}
             </div>
           </div>
