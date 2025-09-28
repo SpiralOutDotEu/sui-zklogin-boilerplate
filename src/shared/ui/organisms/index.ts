@@ -1,3 +1,4 @@
 // Atomic Design - Organisms
-export { default as UserWalletButton } from './UserWalletButton';
+export { FaucetSection, default as FaucetSectionDefault } from './FaucetSection';
 export { NotificationContainer } from './NotificationContainer';
+export { default as UserWalletButton } from './UserWalletButton';
