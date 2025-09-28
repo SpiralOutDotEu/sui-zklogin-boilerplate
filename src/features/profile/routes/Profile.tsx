@@ -176,6 +176,29 @@ export default function Profile() {
         balance={balance || undefined}
         balanceLoading={balanceLoading}
         onAddressCopied={handleAddressCopied}
+        onFaucetComplete={success => {
+          if (success) {
+            // Refresh balance after successful faucet request
+            setTimeout(() => {
+              const fetchBalance = async () => {
+                if (!account?.address || !client) return;
+                setBalanceLoading(true);
+                try {
+                  const balanceData = await client.getBalance({
+                    owner: account.address,
+                  });
+                  const suiBalance = (Number(balanceData.totalBalance) / 1_000_000_000).toFixed(6);
+                  setBalance(suiBalance);
+                } catch {
+                  setBalance('Error');
+                } finally {
+                  setBalanceLoading(false);
+                }
+              };
+              fetchBalance();
+            }, 2000); // Wait 2 seconds for the transaction to be processed
+          }
+        }}
       />
 
       {/* Additional Account Info */}
