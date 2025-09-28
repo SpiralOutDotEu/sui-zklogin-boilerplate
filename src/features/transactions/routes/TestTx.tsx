@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useZkLogin, type ZkSession } from '@/features/auth';
 import { Transaction } from '@mysten/sui/transactions';
 import type { SuiClient } from '@mysten/sui/client';
+import { FaucetSection } from '@/shared/ui';
 import { TestTransactionForm } from '../ui';
 
 // ============================================================================
@@ -96,6 +97,35 @@ export default function TestTx() {
   const { account, ensureValidSession, client } = useZkLogin();
   const [isSending, setIsSending] = useState(false);
   const [txResult, setTxResult] = useState<TxResult | null>(null);
+  const [balance, setBalance] = useState<string | null>(null);
+  const [balanceLoading, setBalanceLoading] = useState(false);
+
+  // ============================================================================
+  // EFFECTS
+  // ============================================================================
+
+  // Fetch balance when account is available
+  useEffect(() => {
+    const fetchBalance = async (): Promise<void> => {
+      if (!account?.address || !client) return;
+
+      setBalanceLoading(true);
+      try {
+        const balanceData = await client.getBalance({
+          owner: account.address,
+        });
+        // Convert from MIST to SUI (1 SUI = 1,000,000,000 MIST)
+        const suiBalance = (Number(balanceData.totalBalance) / 1_000_000_000).toFixed(6);
+        setBalance(suiBalance);
+      } catch {
+        setBalance('Error');
+      } finally {
+        setBalanceLoading(false);
+      }
+    };
+
+    fetchBalance();
+  }, [account?.address, client]);
 
   // ============================================================================
   // EVENT HANDLERS
@@ -160,12 +190,20 @@ export default function TestTx() {
   }
 
   return (
-    <div className='max-w-4xl mx-auto space-y-12'>
+    <div className='max-w-4xl mx-auto space-y-8'>
       <TestTransactionForm
         address={account.address}
         isSending={isSending}
         txResult={txResult}
         onSendTransaction={handleSendTransaction}
+        balanceCard={
+          <FaucetSection
+            address={account.address}
+            client={client}
+            title='Account Balance'
+            onBalanceUpdate={newBalance => setBalance(newBalance)}
+          />
+        }
       />
     </div>
   );
