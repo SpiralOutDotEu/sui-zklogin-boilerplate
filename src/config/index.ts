@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { createAppError, type AppError, type Result, ok, err } from '@/shared/lib';
 
 /**
  * Configuration Schema with Zod Validation
@@ -6,13 +7,20 @@ import { z } from 'zod';
  * This centralized configuration system provides:
  * - Type-safe environment variable validation
  * - Runtime configuration validation
- * - Dynamic redirect URL generation
+ * - Dynamic redirect URL generation (domain-agnostic)
  * - Clear error messages for missing/invalid config
+ * 
+ * The redirect URL is automatically generated from the current domain,
+ * making the app work on any domain without hardcoded URLs.
  * 
  * @example
  * ```typescript
- * import { config } from './config';
- * console.log(config.googleClientId); // Type-safe access
+ * import { getConfig } from './config';
+ * const configResult = getConfig();
+ * if (configResult.ok) {
+ *   console.log(configResult.data.googleClientId); // Type-safe access
+ *   console.log(configResult.data.redirectUrl); // Auto-generated: http://localhost:5173/auth/callback
+ * }
  * ```
  */
 
@@ -57,18 +65,44 @@ const configSchema = z.object({
  * to work across different environments (localhost, staging, production).
  * 
  * @param baseUrl - Optional base URL override (defaults to current origin)
- * @returns Complete redirect URL with /auth/callback path
+ * @returns Result containing the redirect URL or an error
  * 
  * @example
  * ```typescript
- * // In development: http://localhost:5173/auth/callback
- * // In production: https://yourapp.com/auth/callback
- * const redirectUrl = generateRedirectUrl();
+ * const result = generateRedirectUrl();
+ * if (result.ok) {
+ *   console.log(result.data); // http://localhost:5173/auth/callback
+ * } else {
+ *   console.error(result.error.message);
+ * }
  * ```
  */
-const generateRedirectUrl = (baseUrl?: string): string => {
-    const origin = baseUrl || window.location.origin;
-    return `${origin}/auth/callback`;
+const generateRedirectUrl = (baseUrl?: string): Result<string, AppError> => {
+    try {
+        // Use provided baseUrl or get current domain from browser
+        const origin = baseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
+
+        // Check if we have a valid origin
+        if (!origin) {
+            const error = createAppError('Validation', 'Cannot generate redirect URL: window.location.origin is not available', {
+                details: {
+                    context: 'generateRedirectUrl',
+                    reason: 'Browser environment not available',
+                    suggestion: 'This function must be called in a browser environment'
+                }
+            });
+            return err(error);
+        }
+
+        const redirectUrl = `${origin}/auth/callback`;
+        return ok(redirectUrl);
+    } catch (error) {
+        const appError = createAppError('Validation', 'Failed to generate redirect URL', {
+            cause: error,
+            details: { context: 'generateRedirectUrl' }
+        });
+        return err(appError);
+    }
 };
 
 /**
@@ -91,18 +125,21 @@ const getEnvVar = (key: string, fallback?: string): string | undefined => {
  * 
  * This function:
  * 1. Reads environment variables
- * 2. Generates dynamic redirect URL if not provided
+ * 2. Generates dynamic redirect URL
  * 3. Validates all configuration values using Zod schema
- * 4. Throws descriptive errors for invalid configuration
+ * 4. Returns Result for consistent error handling
  * 
- * @returns Validated configuration object
- * @throws Error if configuration validation fails
+ * @returns Result containing validated configuration or error
  */
-const parseConfig = () => {
+const parseConfig = (): Result<Config, AppError> => {
     try {
-        // Get redirect URL from env or generate dynamically
-        const envRedirectUrl = getEnvVar('VITE_REDIRECT_URL');
-        const redirectUrl = envRedirectUrl || generateRedirectUrl();
+        // Generate redirect URL dynamically from current domain
+        // This makes the app work on any domain without hardcoded URLs
+        const redirectUrlResult = generateRedirectUrl();
+        if (!redirectUrlResult.ok) {
+            return err(redirectUrlResult.error);
+        }
+        const redirectUrl = redirectUrlResult.data;
 
         // Parse configuration
         const rawConfig = {
@@ -118,16 +155,36 @@ const parseConfig = () => {
         };
 
         // Validate configuration
-        return configSchema.parse(rawConfig);
+        const validatedConfig = configSchema.parse(rawConfig);
+        return ok(validatedConfig);
     } catch (error) {
         if (error instanceof z.ZodError) {
             const errorMessages = error.issues.map((err: z.core.$ZodIssue) =>
                 `${err.path.join('.')}: ${err.message}`
             ).join('\n');
 
-            throw new Error(`Configuration validation failed:\n${errorMessages}`);
+            const appError = createAppError('Validation', 'Configuration validation failed', {
+                cause: error,
+                details: {
+                    context: 'parseConfig',
+                    validationErrors: errorMessages,
+                    suggestion: 'Check environment variables and configuration values'
+                }
+            });
+            return err(appError);
         }
-        throw error;
+
+        // Handle other errors (like AppError from generateRedirectUrl)
+        if (error && typeof error === 'object' && 'kind' in error) {
+            return err(error as AppError);
+        }
+
+        // Handle unknown errors
+        const appError = createAppError('Unknown', 'Failed to parse configuration', {
+            cause: error,
+            details: { context: 'parseConfig' }
+        });
+        return err(appError);
     }
 };
 
@@ -136,26 +193,30 @@ const parseConfig = () => {
 // ============================================================================
 
 /**
- * Validated application configuration
+ * Configuration provider with error handling
  * 
- * This object contains all validated configuration values with full type safety.
- * Access configuration values directly from this object throughout the application.
+ * This function safely loads and validates configuration, providing
+ * graceful error handling instead of crashing the app at startup.
+ * 
+ * @returns Result containing validated configuration or error
  * 
  * @example
  * ```typescript
- * import { config } from './config';
+ * import { getConfig } from './config';
  * 
- * // Type-safe access
- * const clientId = config.googleClientId;
- * const redirectUrl = config.redirectUrl;
- * 
- * // Conditional logic based on environment
- * if (config.isDevelopment) {
- *   console.log('Running in development mode');
+ * const configResult = getConfig();
+ * if (configResult.ok) {
+ *   const config = configResult.data;
+ *   console.log(config.googleClientId);
+ * } else {
+ *   console.error('Config error:', configResult.error.message);
  * }
  * ```
  */
-export const config = parseConfig();
+export const getConfig = (): Result<Config, AppError> => {
+    return parseConfig();
+};
+
 
 /**
  * Configuration type for TypeScript inference
@@ -172,9 +233,15 @@ export type Config = z.infer<typeof configSchema>;
 /**
  * Check if configuration is valid for production deployment
  * 
- * @returns Object with validation results and missing requirements
+ * @returns Result with validation results and missing requirements
  */
-export const validateProductionConfig = () => {
+export const validateProductionConfig = (): Result<{ isValid: boolean; issues: string[]; config: Config }, AppError> => {
+    const configResult = getConfig();
+    if (!configResult.ok) {
+        return err(configResult.error);
+    }
+
+    const config = configResult.data;
     const issues: string[] = [];
 
     if (!config.googleClientId) {
@@ -189,20 +256,34 @@ export const validateProductionConfig = () => {
         issues.push('Application is running in development mode');
     }
 
-    return {
+    return ok({
         isValid: issues.length === 0,
         issues,
-        config: config as Config,
-    };
+        config,
+    });
 };
 
 /**
  * Get configuration summary for debugging
  * 
- * @returns Safe configuration summary (excludes sensitive data)
+ * @returns Result with safe configuration summary (excludes sensitive data)
  */
-export const getConfigSummary = () => {
-    return {
+export const getConfigSummary = (): Result<{
+    redirectUrl: string;
+    proverUrl: string;
+    useBackendSaltService: boolean;
+    saltServiceUrl: string;
+    suiRpcUrl: string;
+    isDevelopment: boolean;
+    logLevel: string;
+}, AppError> => {
+    const configResult = getConfig();
+    if (!configResult.ok) {
+        return err(configResult.error);
+    }
+
+    const config = configResult.data;
+    return ok({
         redirectUrl: config.redirectUrl,
         proverUrl: config.proverUrl,
         useBackendSaltService: config.useBackendSaltService,
@@ -210,5 +291,5 @@ export const getConfigSummary = () => {
         suiRpcUrl: config.suiRpcUrl,
         isDevelopment: config.isDevelopment,
         logLevel: config.logLevel,
-    };
+    });
 };
