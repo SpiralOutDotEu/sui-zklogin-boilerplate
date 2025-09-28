@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useZkLogin } from '@/features/auth';
 import { AccountCard, Panel, SessionStatus, VerifiedBadge } from '@/shared/ui';
-import { ProfileHeader, ProfileStats, OwnedObjectsList } from '../ui';
+import { ProfileHeader, ProfileStats, OwnedObjectsList, SaltManagementPanel } from '../ui';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -208,6 +208,9 @@ export default function Profile() {
           />
         </div>
       </Panel>
+
+      {/* Salt Management Panel */}
+      <SaltManagementPanel />
 
       {/* Owned Objects */}
       <OwnedObjectsList address={account.address} client={client} />
