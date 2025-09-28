@@ -19,6 +19,8 @@ interface TestTransactionFormProps {
   } | null;
   /** Callback when transaction is initiated */
   onSendTransaction: () => void;
+  /** Balance card component to display under the header */
+  balanceCard?: React.ReactNode;
   /** Additional CSS classes */
   className?: string;
 }
@@ -68,13 +70,14 @@ export default function TestTransactionForm({
   isSending,
   txResult,
   onSendTransaction,
+  balanceCard,
   className = '',
 }: TestTransactionFormProps) {
   // ============================================================================
   // HOOKS & STATE
   // ============================================================================
 
-  const [showDebug, setShowDebug] = useState(false);
+  const [_showDebug, _setShowDebug] = useState(false);
 
   // ============================================================================
   // RENDER
@@ -87,6 +90,9 @@ export default function TestTransactionForm({
         <h1 className={STYLES.title}>Test Transaction</h1>
         <p className={STYLES.subtitle}>Send 0.0001 SUI to yourself to test your zkLogin wallet</p>
       </div>
+
+      {/* Balance Card */}
+      {balanceCard && <div className='mb-8'>{balanceCard}</div>}
 
       {/* Main Card */}
       <Panel variant='glass' size='lg'>
@@ -129,14 +135,8 @@ export default function TestTransactionForm({
 
           {/* Send Button */}
           {!txResult && (
-            <div className='mb-8'>
-              <Button
-                onClick={onSendTransaction}
-                disabled={isSending}
-                variant='primary'
-                size='lg'
-                className='px-8 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:from-gray-500 disabled:to-gray-600 text-white font-semibold transition-all duration-200 glow-effect hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed'
-              >
+            <div className='mb-8 flex justify-center'>
+              <Button onClick={onSendTransaction} disabled={isSending} variant='hero'>
                 {isSending ? (
                   <div className='flex items-center gap-3'>
                     <LoadingSpinner size='sm' variant='white' />
@@ -155,46 +155,6 @@ export default function TestTransactionForm({
           {/* Disclaimer */}
           <div className={STYLES.disclaimer}>
             This is a test transaction. 0.0001 SUI will be sent from your account to itself.
-          </div>
-
-          {/* Debug Section */}
-          <div className={STYLES.debugSection}>
-            <button onClick={() => setShowDebug(!showDebug)} className={STYLES.debugToggle}>
-              {showDebug ? 'Hide' : 'Show'} Debug Info
-            </button>
-
-            {showDebug && (
-              <div className={STYLES.debugContent}>
-                {/* Current Salt */}
-                <div className={STYLES.debugItem}>
-                  <div className={STYLES.debugLabel}>Current Salt:</div>
-                  <div className={STYLES.debugValue}>
-                    {sessionStorage.getItem('zk_user_salt') || 'Not set'}
-                  </div>
-                </div>
-
-                {/* Address */}
-                <div className={STYLES.debugItem}>
-                  <div className={STYLES.debugLabel}>Address:</div>
-                  <div className={STYLES.debugValue}>{address}</div>
-                </div>
-
-                {/* Clear Salt Button */}
-                <button
-                  onClick={() => {
-                    if (
-                      confirm('This will clear your salt and generate a new address. Continue?')
-                    ) {
-                      // This would need to be passed as a prop from parent
-                      // Clear salt functionality would be implemented here
-                    }
-                  }}
-                  className={STYLES.clearSaltButton}
-                >
-                  Clear Salt (New Address)
-                </button>
-              </div>
-            )}
           </div>
         </div>
       </Panel>
