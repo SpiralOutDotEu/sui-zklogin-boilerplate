@@ -244,28 +244,86 @@ graph TB
 
 ```
 src/
-├── app/                        # 🎯 Application Layer
+├── app/                        # 🎯 Application Layer (App-specific components)
 │   ├── components/             # App-level components
+│   │   ├── Home.tsx            # Landing page component
+│   │   ├── Navbar.tsx          # Navigation bar component
+│   │   └── index.ts            # Barrel exports
 │   ├── layouts/                # Layout components
+│   │   ├── AppLayout.tsx       # Main application layout
+│   │   └── index.ts            # Barrel exports
 │   ├── providers/              # App-level providers
+│   │   ├── ErrorBoundary.tsx   # Error boundary component
+│   │   ├── NotificationProvider.tsx # Notification system
+│   │   └── index.ts            # Barrel exports
 │   └── index.ts                # Main app exports
-├── features/                   # 🚀 Feature Modules
+├── features/                   # 🚀 Feature Modules (Domain-specific)
 │   ├── auth/                   # Authentication feature
-│   │   ├── hooks/              # React integration
-│   │   ├── routes/             # Feature-specific UI
-│   │   ├── services/           # Business logic
-│   │   ├── store/              # State management
-│   │   ├── types.ts            # Feature types
-│   │   └── index.ts            # Feature exports
+│   │   ├── hooks/              # Auth-specific hooks
+│   │   │   ├── useCrossTabSync.ts # Cross-tab synchronization
+│   │   │   ├── ZkLoginProvider.tsx # React Context provider
+│   │   │   └── index.ts        # Barrel exports
+│   │   ├── routes/             # Auth-specific routes
+│   │   │   ├── AuthCallback.tsx # OAuth callback handler
+│   │   │   └── index.ts        # Barrel exports
+│   │   ├── services/           # Auth business logic
+│   │   │   ├── zkLoginService.ts # Main zkLogin service
+│   │   │   ├── saltService.ts  # Salt management service
+│   │   │   └── index.ts        # Barrel exports
+│   │   ├── store/              # Auth state management
+│   │   │   ├── zkLoginStore.ts # Zustand store
+│   │   │   └── index.ts        # Barrel exports
+│   │   ├── types.ts            # Auth-specific types
+│   │   └── index.ts            # Feature barrel exports
 │   ├── profile/                # User profile feature
-│   └── transactions/           # Transaction feature
-├── shared/                     # 🔧 Shared Utilities
+│   │   ├── routes/             # Profile routes
+│   │   │   ├── Profile.tsx     # Profile page component
+│   │   │   └── index.ts        # Barrel exports
+│   │   └── index.ts            # Feature barrel exports
+│   ├── transactions/           # Transaction feature
+│   │   ├── routes/             # Transaction routes
+│   │   │   ├── TestTx.tsx      # Transaction testing page
+│   │   │   └── index.ts        # Barrel exports
+│   │   ├── services/           # Transaction services
+│   │   └── index.ts            # Feature barrel exports
+│   └── gallery/                # UI component gallery feature
+│       ├── routes/             # Gallery routes
+│       │   ├── UIGallery.tsx   # Component showcase page
+│       │   └── index.ts        # Barrel exports
+│       └── index.ts            # Feature barrel exports
+├── shared/                     # 🔧 Shared Utilities (Reusable across features)
 │   ├── lib/                    # Core libraries
-│   ├── ui/                     # UI components (Atomic Design)
+│   │   ├── errors.ts           # Error handling utilities
+│   │   ├── http.ts             # HTTP client utilities
+│   │   ├── result.ts           # Result type utilities
+│   │   ├── sui/                # Sui blockchain utilities
+│   │   │   └── client.ts       # Sui client configuration
+│   │   └── index.ts            # Barrel exports
+│   ├── ui/                     # Shared UI components (Atomic Design)
+│   │   ├── atoms/              # Basic building blocks
+│   │   │   ├── Avatar.tsx      # User avatar component
+│   │   │   ├── Button.tsx      # Button component
+│   │   │   ├── Icon.tsx        # Icon component
+│   │   │   ├── Input.tsx       # Input component
+│   │   │   ├── LoadingSpinner.tsx # Loading spinner
+│   │   │   └── index.ts        # Barrel exports
+│   │   ├── molecules/          # Simple combinations
+│   │   │   ├── ConnectWalletButton.tsx # Wallet connection button
+│   │   │   ├── DropdownMenu.tsx # Dropdown menu component
+│   │   │   ├── NotificationItem.tsx # Notification item
+│   │   │   └── index.ts        # Barrel exports
+│   │   ├── organisms/          # Complex components
+│   │   │   ├── UserWalletButton.tsx # User wallet display
+│   │   │   ├── NotificationContainer.tsx # Notification system
+│   │   │   └── index.ts        # Barrel exports
+│   │   ├── README.md           # UI component guidelines
+│   │   └── index.ts            # Main UI exports
 │   ├── utils/                  # Utility functions
+│   │   ├── cookieStorage.ts    # Cookie-based storage utilities
+│   │   └── index.ts            # Barrel exports
 │   └── index.ts                # Main shared exports
-├── config/                     # ⚙️ Configuration
-│   └── index.ts                # Centralized config
+├── config/                     # ⚙️ Configuration Management
+│   └── index.ts                # Centralized configuration with Zod validation
 ├── main.tsx                    # Application entry point
 └── index.css                   # Global styles
 ```
@@ -274,7 +332,11 @@ src/
 
 #### **Feature-Based Service Layer Pattern**
 
-Each feature module contains its own service layer:
+This project follows a **Feature-Based Service Layer Pattern** that organizes business logic by domain features while maintaining clear separation of concerns:
+
+#### **Feature Module Structure**
+
+Each feature module (`features/*/`) contains its own service layer:
 
 - **`services/`**: Business logic and external API interactions
 - **`store/`**: State management (thin layer over services)
@@ -282,7 +344,31 @@ Each feature module contains its own service layer:
 - **`routes/`**: Feature-specific UI components
 - **`types.ts`**: Feature-specific type definitions
 
-#### **Service Layer Benefits**
+#### **ZkLoginService** - Authentication Business Logic
+
+- **OAuth Flow Management**: Handles Google OAuth initiation and completion
+- **Cryptographic Operations**: Manages ephemeral keypairs, nonce generation, address derivation
+- **ZK Proof Generation**: Communicates with ZK prover service
+- **Session Creation**: Creates zkLogin sessions for transaction signing
+- **Error Handling**: Returns structured results instead of throwing exceptions
+- **Configuration Integration**: Uses centralized config system with Zod validation
+
+#### **SaltService** - Salt Management
+
+- **Demo Implementation**: Client-side salt generation for development
+- **Backend Implementation**: Production-ready backend salt service
+- **Strategy Pattern**: Easy switching between implementations via configuration
+- **Consistent API**: Same interface regardless of implementation
+- **Dependency Injection**: Injected into ZkLoginService for testability
+
+#### **Shared Services** - Cross-Feature Utilities
+
+- **HTTP Client**: Centralized HTTP communication with error handling
+- **Error Handling**: Structured error types and result patterns
+- **Configuration**: Centralized config with validation and type safety
+- **Sui Client**: Blockchain interaction utilities
+
+#### **Benefits of Feature-Based Service Architecture**
 
 - ✅ **Domain Separation**: Each feature owns its business logic
 - ✅ **Scalability**: Easy to add new features without affecting existing ones
@@ -292,7 +378,7 @@ Each feature module contains its own service layer:
 - ✅ **Configuration**: Environment-based service selection with type safety
 - ✅ **Dependency Injection**: Services can be easily swapped for testing
 
-### Data Flow
+### Service-Oriented Data Flow
 
 ```mermaid
 sequenceDiagram
@@ -347,11 +433,48 @@ sequenceDiagram
     F->>C: Ready for transactions
 ```
 
-### Error Handling Architecture
+### Data Flow Architecture
 
-#### **Structured Error System**
+```mermaid
+graph LR
+    subgraph "Browser Storage"
+        A[Session Cookies<br/>Ephemeral Data]
+        B[Persistent Cookies<br/>User Salt]
+        C[Zustand Store<br/>React State]
+    end
 
-The project implements a comprehensive error handling system:
+    subgraph "External Services"
+        D[Google OAuth]
+        E[ZK Prover Service]
+        F[Sui Blockchain]
+    end
+
+    subgraph "Application Flow"
+        G[Login] --> H[OAuth Callback]
+        H --> I[Salt Generation]
+        I --> J[Address Derivation]
+        J --> K[ZK Proof Generation]
+        K --> L[Transaction Signing]
+    end
+
+    A --> C
+    B --> C
+    C --> G
+    G --> D
+    H --> I
+    I --> J
+    J --> K
+    K --> E
+    L --> F
+```
+
+## 🚨 Error Handling Architecture
+
+### Structured Error System
+
+This project implements a comprehensive error handling system that provides type-safe, consistent error management across all layers:
+
+#### **AppError Type System**
 
 ```typescript
 // Centralized error types
@@ -381,7 +504,7 @@ export type AppError = {
 
 #### **Result Pattern**
 
-Services return `Result<T, E>` types for type-safe error handling:
+The application uses a `Result<T, E>` type for handling success/failure cases without throwing exceptions:
 
 ```typescript
 // Service methods return Result types
@@ -403,11 +526,42 @@ if (result.ok) {
 }
 ```
 
-### Provider Architecture
+#### **Error Boundary Integration**
 
-#### **Layered Provider System**
+```typescript
+// App-level error boundary with structured error handling
+<ErrorBoundary
+  onError={(error, errorInfo) => {
+    // Convert to AppError for consistent handling
+    const appError = toAppError(error);
+    // Send to error reporting service
+    console.error('Application error:', appError, errorInfo);
+  }}
+>
+  <App />
+</ErrorBoundary>
+```
 
-The application uses a carefully orchestrated provider hierarchy:
+#### **Notification System Integration**
+
+```typescript
+// Automatic error display through notification system
+const { showError, showSuccess } = useNotifications();
+
+// Services automatically convert errors to user-friendly messages
+const result = await service.method();
+if (!result.ok) {
+  showError(result.error); // Displays user-friendly error message
+}
+```
+
+## 🎭 Provider Architecture
+
+### Layered Provider System
+
+The application uses a carefully orchestrated provider hierarchy that provides cross-cutting concerns:
+
+#### **Provider Hierarchy** (from main.tsx)
 
 ```typescript
 <ErrorBoundary>           // 1. Error boundary (outermost)
@@ -419,6 +573,61 @@ The application uses a carefully orchestrated provider hierarchy:
 </ErrorBoundary>
 ```
 
+#### **ErrorBoundary Provider**
+
+- **Purpose**: Catches JavaScript errors anywhere in the component tree
+- **Features**:
+  - Graceful error fallback UI
+  - Development error details
+  - Error reporting integration
+  - Recovery mechanisms
+
+```typescript
+<ErrorBoundary
+  onError={(error, errorInfo) => {
+    // Production error reporting
+    console.error('Application error:', error, errorInfo);
+  }}
+  fallback={(error, resetError) => (
+    <CustomErrorFallback error={error} onReset={resetError} />
+  )}
+>
+  {children}
+</ErrorBoundary>
+```
+
+#### **NotificationProvider**
+
+- **Purpose**: Centralized notification system for user feedback
+- **Features**:
+  - Toast notifications
+  - Error display integration
+  - Success/warning/info messages
+  - Auto-dismiss functionality
+
+```typescript
+const { showError, showSuccess, showWarning, showInfo } = useNotifications();
+
+// Automatic error handling
+showError(appError); // Displays user-friendly error message
+
+// Success feedback
+showSuccess('Login Successful', 'Welcome back!');
+```
+
+#### **ZkLoginProvider**
+
+- **Purpose**: Authentication state management
+- **Features**:
+  - OAuth flow management
+  - Session restoration
+  - Cross-tab synchronization
+  - Transaction signing capabilities
+
+```typescript
+const { account, loginWithProvider, ensureZkSession } = useZkLogin();
+```
+
 #### **Provider Benefits**
 
 - ✅ **Separation of Concerns**: Each provider handles specific functionality
@@ -426,6 +635,38 @@ The application uses a carefully orchestrated provider hierarchy:
 - ✅ **Consistent UX**: Centralized error handling and notifications
 - ✅ **Development Experience**: Clear error boundaries and debugging
 - ✅ **Production Ready**: Graceful error recovery and reporting
+
+### Service Configuration
+
+```typescript
+// Centralized configuration with Zod validation
+import { getConfig } from '@/config';
+
+const configResult = getConfig();
+if (configResult.ok) {
+  const config = configResult.data;
+  // Type-safe access to all configuration values
+  const zkLoginService = createZkLoginService({
+    googleClientId: config.googleClientId,
+    redirectUrl: config.redirectUrl,
+    proverUrl: config.proverUrl,
+    useBackendSaltService: config.useBackendSaltService,
+    saltServiceUrl: config.saltServiceUrl,
+    suiRpcUrl: config.suiRpcUrl,
+  });
+} else {
+  // Handle configuration errors gracefully
+  console.error('Configuration error:', configResult.error.message);
+}
+```
+
+#### **Configuration Features**
+
+- **Type Safety**: Full TypeScript support with Zod validation
+- **Runtime Validation**: Configuration errors caught at startup
+- **Dynamic URLs**: Redirect URLs generated from current domain
+- **Environment Detection**: Automatic development/production detection
+- **Error Handling**: Structured error reporting for missing configuration
 
 ---
 
