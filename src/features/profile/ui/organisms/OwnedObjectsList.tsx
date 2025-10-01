@@ -27,6 +27,7 @@ interface OwnedObjectsListProps {
 // ============================================================================
 
 const STYLES = {
+  container: 'w-full',
   title: 'text-2xl font-bold text-white mb-6',
   list: 'space-y-3',
   objectItem: 'bg-white/5 rounded-xl p-4 hover:bg-white/10 transition-colors',
@@ -81,7 +82,10 @@ export default function OwnedObjectsList({
         const data = await client.getOwnedObjects({
           owner: address,
         });
-        setObjects(data.data || []);
+        const mapped: OwnedObject[] = (data.data || []).map(item => ({
+          data: item.data ? { objectId: item.data.objectId } : undefined,
+        }));
+        setObjects(mapped);
       } catch {
         setError('Failed to load objects');
       } finally {
